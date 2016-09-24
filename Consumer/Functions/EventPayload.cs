@@ -1,4 +1,4 @@
-﻿namespace Consumer.Payloads
+﻿namespace Consumer.Functions
 {
     using System;
 

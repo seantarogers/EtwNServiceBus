@@ -1,6 +1,4 @@
-﻿using IEventConsumer = Consumer.Consumers.IEventConsumer;
-
-namespace Consumer.Exensions
+﻿namespace Consumer.Exensions
 {
     using System.Collections.Generic;
     using System.Configuration;
@@ -9,10 +7,18 @@ namespace Consumer.Exensions
 
     using Adapters;
 
-    using Consumer.Queues;
+    using Consumer.Commands.Decorators;
+    using Consumer.Commands.Handlers;
+    using Consumer.Dapper;
+    using Consumer.Events;
+
+    using Consumers;
+    using Functions;
+    using Providers;
+
+    using Queues;
 
     using Producers;
-    using Subscribers;
 
     using Easy.Logger;
 
@@ -29,33 +35,27 @@ namespace Consumer.Exensions
 
         public static Container RegisterComponents(this Container container)
         {
-            RegisterServices(container);
-            RegisterSubscribers(container);
+            RegisterFunctions(container);
             RegisterProducers(container);
             RegisterConsumers(container);
             RegisterProviders(container);
             RegisterCommands(container);
             RegisterFactories(container);
             RegisterAdapters(container);
-
+            RegisterManagers(container);
             return container;
         }
 
-        private static void RegisterSubscribers(Container container)
+        private static void RegisterManagers(Container container)
         {
-            container.Register<IEventSubscriber, EventSubscriber>();
+            container.RegisterSingleton<ITraceSessionManager, TraceSessionManager>();
         }
 
         private static void RegisterProducers(Container container)
         {
-            container.Register<IErrorEventProducer, ErrorEventProducer>();
-            container.RegisterCollection<IDebugEventProducer>(new[]
-            {
-                typeof(DebugEventProducer),
-                typeof(DebugBusEventProducer)
-            });
+            container.Register<IEventProducer, EventProducer>();
         }
-
+        
         private static void RegisterConsumers(Container container)
         {
             RegisterCollectionOfSingletons<IEventConsumer>(container);
@@ -64,8 +64,8 @@ namespace Consumer.Exensions
         private static void RegisterAdapters(Container container)
         {
             container.RegisterSingleton<IContainerAdapter, ContainerAdapter>();
-            container.RegisterSingleton<IErrorQueue, ErrorQueue>();
-            container.RegisterSingleton<IDebugQueue, DebugQueue>();
+            container.RegisterSingleton<IEventQueue<DebugTraceReceivedEvent>, EventQueue<DebugTraceReceivedEvent>>();
+            container.RegisterSingleton<IEventQueue<ErrorTraceReceivedEvent>, EventQueue<ErrorTraceReceivedEvent>>();            
         }
 
         private static void RegisterFactories(Container container)
@@ -84,12 +84,11 @@ namespace Consumer.Exensions
                 typeof (OneWayAmbientUnitOfWorkDecorator<>), Lifestyle.Scoped);
         }
 
-        private static void RegisterServices(Container container)
+        private static void RegisterFunctions(Container container)
         {
-            container.RegisterSingleton<IAsiLogger, AsiLogger>();
             container.RegisterSingleton<ILogService>(() => Log4NetService.Instance);
 
-            container.Register<ITraceEventCommandExecutor, TraceEventCommandExecutor>(Lifestyle.Scoped);
+            container.Register<IEventCommandExecutor, EventCommandExecutor>(Lifestyle.Scoped);
             container.Register<IEventPayloadBuilder, EventPayloadBuilder>(Lifestyle.Scoped);
         }
 
@@ -106,14 +105,15 @@ namespace Consumer.Exensions
 
             container.RegisterCollection<TInterface>(eventConsumerTypeRegistrations);
         }
-        
+
         private static void RegisterProviders(Container container)
         {
             container.RegisterSingleton<ConfigurationProvider>();
-            container.RegisterInitializer<ConfigurationProvider>(c =>
-            {
-                c.AuditConnectionString = ConfigurationManager.ConnectionStrings["PremiumFinanceAudit"].ConnectionString;
-            });
+            container.RegisterInitializer<ConfigurationProvider>(
+                c =>
+                    {
+                        c.ConnectionString = ConfigurationManager.ConnectionStrings["TraceDatabase"].ConnectionString;
+                    });
         }
     }
 }

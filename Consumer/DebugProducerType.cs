@@ -1,4 +1,4 @@
-﻿namespace Consumer.Enumerations
+﻿namespace Consumer
 {
     public enum DebugProducerType
     {

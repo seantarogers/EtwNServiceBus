@@ -6,38 +6,52 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    using Consumer.CustomConfiguration;
-    using Consumer.Exensions;
-    using Consumer.Queues;
-    using Consumer.Subscribers;
+    using Consumers;
+    using Events;
+    using Producers;
+    using Queues;
 
+    using CustomConfiguration;
+
+    using Easy.Logger;
+
+    using Exensions;
+
+    using log4net.Config;
+    
     using SimpleInjector;
 
     using Topshelf;
 
     public class ServiceHost : IServiceHost
     {
-        private static IEnumerable<IEventConsumer> eventConsumers;
-        private static List<IEventSubscriber> eventSubscribers;
-        private static IDebugQueue debugQueue;
-        private static IErrorQueue errorQueue;
-        private static IAsiLogger asiLogger;
+        private List<IEventProducer> eventProducers;
+        private IEnumerable<IEventConsumer> eventConsumers;
+        private static IEventQueue<DebugTraceReceivedEvent> debugQueue;
+        private static IEventQueue<ErrorTraceReceivedEvent> errorQueue;
         private static HostControl thisHostControl;
+
+        private ILogger easyLogger;
 
         public static Container Container { get; private set; }
 
         public bool Start(HostControl hostControl)
         {
             thisHostControl = hostControl;
-            SetUpLog4Net();
-            asiLogger = new AsiLogger();
-            eventSubscribers = new List<IEventSubscriber>();
+            try
+            {
+                SetUpLog4Net();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
 
             try
             {
                 CreateContainer();
                 StartEventConsumers();
-                StartEventSubscribers();
+                StartEventProducers();
                 StoreQueuesForlaterDisposal();
             }
             catch (AggregateException aggregateException)
@@ -47,7 +61,7 @@
             }
             catch (Exception exception)
             {
-                asiLogger.ErrorFormat(this, $"An exception was raised in the ServiceHost. Details: {exception}");
+                easyLogger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {exception}");
                 return false;
             }
 
@@ -56,14 +70,14 @@
 
         public bool Stop()
         {
-            asiLogger.ErrorFormat(this, "Stop was called in the ServiceHost");
+            easyLogger.ErrorFormat("Stop was called in the ServiceHost");
 
             if (!StopConsumersConsumingFromQueues())
             {
                 return false;
             }
 
-            return StopEventSubscribers();
+            return StopEventProducers();
         }
 
         private void LogAggregateException(AggregateException aggregateException)
@@ -74,50 +88,44 @@
                 stringBuilder.Append(innerException);
             }
 
-            asiLogger.ErrorFormat(this, $"An exception was raised in the ServiceHost. Details: {stringBuilder}");
+            easyLogger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
         }
 
         private bool StopConsumersConsumingFromQueues()
         {
             try
             {
-                asiLogger.DebugFormat(this, "Stopping errorQueue");
+                easyLogger.DebugFormat("Stopping errorQueue");
                 errorQueue?.CompleteAdding();
-                asiLogger.DebugFormat(this, "Stopped errorQueue");
+                easyLogger.DebugFormat("Stopped errorQueue");
 
-                asiLogger.DebugFormat(this, "Stopping debugQueue");
+                easyLogger.DebugFormat("Stopping debugQueue");
                 debugQueue?.CompleteAdding();
-                asiLogger.DebugFormat(this, "Stopped debugQueue");
-
-                asiLogger?.DebugFormat(this, "Stopping debugBusQueue");
-                debugBusQueue.CompleteAdding();
-                asiLogger.DebugFormat(this, "Stopped debugBusQueue");
+                easyLogger.DebugFormat("Stopped debugQueue");                
             }
             catch (Exception exception)
             {
-                asiLogger.ErrorFormat(this,
-                    $"An error was raised whilst trying to stop a queue. Details: {exception}");
+                easyLogger.ErrorFormat($"An error was raised whilst trying to stop a queue. Details: {exception}");
                 return false;
             }
             return true;
         }
 
-        private bool StopEventSubscribers()
+        private bool StopEventProducers()
         {
             try
             {
-                foreach (var eventSubscriber in eventSubscribers)
+                foreach (var eventProducer in eventProducers)
                 {
-                    var eventSubscriberName = eventSubscriber.GetType().FullName;
-                    asiLogger.DebugFormat(this, $"Stopping event subscriber: {eventSubscriberName}");
-                    eventSubscriber.Stop();
-                    asiLogger.DebugFormat(this, $"Stopped event subscriber: {eventSubscriberName}");
+                    var eventSubscriberName = eventProducer.GetType().FullName;
+                    easyLogger.DebugFormat($"Stopping event producer : {eventSubscriberName}");
+                    eventProducer.Stop();
+                    easyLogger.DebugFormat($"Stopped event producer: {eventSubscriberName}");
                 }
             }
             catch (Exception exception)
             {
-                asiLogger.ErrorFormat(this,
-                    $"An error was raised whilst trying to stop an eventSubscriber. Details: {exception}");
+                easyLogger.ErrorFormat($"An error was raised whilst trying to stop an eventProducer. Details: {exception}");
                 return false;
             }
             return true;
@@ -125,26 +133,26 @@
 
         private static void StoreQueuesForlaterDisposal()
         {
-            debugQueue = Container.GetInstance<IDebugQueueAdapter>();
-            errorQueue = Container.GetInstance<IErrorQueueAdapter>();
-            debugBusQueue = Container.GetInstance<IDebugBusQueueAdapter>();
+            debugQueue = Container.GetInstance<IEventQueue<DebugTraceReceivedEvent>>();
+            errorQueue = Container.GetInstance<IEventQueue<ErrorTraceReceivedEvent>>();
         }
 
-        private void StartEventSubscribers()
+        private void StartEventProducers()
         {
-            var eventSubscriberElements = EventSubscribersSection.Section.EventSubscriberElements;
-            for (var i = 0; i < eventSubscriberElements.Count; i++)
+            eventProducers = new List<IEventProducer>();
+            var eventProducerElements = EventProducersSection.Section.EventProducerElements;
+            for (var i = 0; i < eventProducerElements.Count; i++)
             {
-                var eventSubscriberConfiguration = eventSubscriberElements[i];
+                var eventSubscriberConfiguration = eventProducerElements[i];
 
-                var eventSubscriber = Container.GetInstance<IEventSubscriber>();
+                var eventSubscriber = Container.GetInstance<IEventProducer>();
                 eventSubscriber.OnError(SubscriberError);
-                asiLogger.DebugFormat(this, $"Starting event subscriber: {eventSubscriber.GetType().FullName}");
+                easyLogger.DebugFormat($"Starting event producer: {eventSubscriber.GetType().FullName}");
 
                 Task.Factory.StartNew(() => { eventSubscriber.Start(eventSubscriberConfiguration); },
                     TaskCreationOptions.LongRunning);
 
-                eventSubscribers.Add(eventSubscriber);
+                eventProducers.Add(eventSubscriber);
             }
         }
 
@@ -154,21 +162,21 @@
             foreach (var eventConsumer in eventConsumers)
             {
                 eventConsumer.OnError(ConsumerError);
-                asiLogger.DebugFormat(this, $"Starting event consumer: {eventConsumer.GetType().FullName}");
+                easyLogger.DebugFormat($"Starting event consumer: {eventConsumer.GetType().FullName}");
                 Task.Factory.StartNew(() => { eventConsumer.Start(); }, TaskCreationOptions.LongRunning);
             }
         }
 
         private void SubscriberError(Exception exception)
         {
-            asiLogger.ErrorFormat(this, "An subscriber error was raised. " +
+            easyLogger.ErrorFormat("An subscriber error was raised. " +
                                         $"The windows service will be stopped. Details: {exception}");
             thisHostControl.Stop();
         }
 
         private void ConsumerError(Exception exception)
         {
-            asiLogger.ErrorFormat(this, "A consumer error was raised. " +
+            easyLogger.ErrorFormat("A consumer error was raised. " +
                                         $"The windows service will be stopped. Details: {exception}");
             thisHostControl.Stop();
         }
@@ -180,10 +188,11 @@
             Container.RegisterComponents();            
         }
 
-        private static void SetUpLog4Net()
+        private void SetUpLog4Net()
         {
             EasyLogger.InitializeTypeReference();
             XmlConfigurator.ConfigureAndWatch(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
+            easyLogger = Log4NetService.Instance.GetLogger(GetType());
         }
     }
 }

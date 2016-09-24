@@ -2,21 +2,23 @@
 {
     using Consumer.Constants;
 
+    using Easy.Logger;
+
     using Microsoft.Diagnostics.Tracing.Session;
 
     public class TraceSessionManager : ITraceSessionManager
     {
-        private readonly IAsiLogger asiLogger;
-        private static readonly object ThisLock = new object();
+        private readonly ILogger easyLogger;
+        private static readonly object thisLock = new object();
 
-        public TraceSessionManager(IAsiLogger asiLogger)
+        public TraceSessionManager(ILogService logService)
         {
-            this.asiLogger = asiLogger;
+            easyLogger = logService.GetLogger(GetType());
         }
 
         public TraceEventSession CreateTraceEventSession(string sessionName, string eventSourceName)
         {
-            lock (ThisLock)
+            lock (thisLock)
             {
                 if (TraceEventSessionIsActive(sessionName))
                 {
@@ -31,7 +33,7 @@
 
         public void DisposeTraceEventSession(string sessionName, TraceEventSession traceEventSession)
         {
-            lock (ThisLock)
+            lock (thisLock)
             {
                 if (traceEventSession == null)
                 {
@@ -45,7 +47,7 @@
 
                 if (traceEventSession.EventsLost > 0)
                 {
-                    asiLogger.ErrorFormat(this, HostConstants.LostEventsThisSession, sessionName,
+                    easyLogger.ErrorFormat(HostConstants.LostEventsThisSession, sessionName,
                         traceEventSession.EventsLost);
                 }
 
@@ -55,7 +57,7 @@
 
         private void DisposeExistingSession(string sessionName)
         {
-            asiLogger.DebugFormat(this, HostConstants.TracingSessionAlreadyExists, sessionName);
+            easyLogger.DebugFormat(HostConstants.TracingSessionAlreadyExists, sessionName);
             var existingTraceEventSession = new TraceEventSession(sessionName);
             existingTraceEventSession.Dispose();
         }

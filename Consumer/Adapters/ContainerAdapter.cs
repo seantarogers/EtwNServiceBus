@@ -2,6 +2,8 @@
 {
     using System;
 
+    using SimpleInjector;
+
     public class ContainerAdapter : IContainerAdapter
     {
         public IDisposable BeginLifetimeScope()

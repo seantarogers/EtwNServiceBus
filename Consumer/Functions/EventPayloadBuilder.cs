@@ -5,7 +5,6 @@
     using System.Text;
 
     using Adapters;
-    using Payloads;
 
     public class EventPayloadBuilder : IEventPayloadBuilder
     {

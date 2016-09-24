@@ -3,10 +3,10 @@
     using System;
     using System.Configuration;
 
-    [ConfigurationCollection(typeof(EventSubscriberConfigurationElement))]
-    public class EventSubscriberElementCollection : ConfigurationElementCollection
+    [ConfigurationCollection(typeof(EventProducerConfigurationElement))]
+    public class EventProducerElementCollection : ConfigurationElementCollection
     {
-        private const string PropertyName = "eventSubscriber";
+        private const string PropertyName = "eventProducer";
 
         public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.BasicMapAlternate;
 
@@ -24,14 +24,14 @@
         
         protected override ConfigurationElement CreateNewElement()
         {
-            return new EventSubscriberConfigurationElement();
+            return new EventProducerConfigurationElement();
         }
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            return ((EventSubscriberConfigurationElement)element).Name;
+            return ((EventProducerConfigurationElement)element).Name;
         }
 
-        public EventSubscriberConfigurationElement this[int idx] => (EventSubscriberConfigurationElement)BaseGet(idx);
+        public EventProducerConfigurationElement this[int idx] => (EventProducerConfigurationElement)BaseGet(idx);
     }
 }

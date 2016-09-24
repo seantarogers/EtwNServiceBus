@@ -47,6 +47,10 @@
       <HintPath>..\packages\Easy.Logger.1.8.0\lib\net40\Easy.Logger.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Diagnostics.Tracing.TraceEvent, Version=1.0.41.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\lib\net40\Microsoft.Diagnostics.Tracing.TraceEvent.dll</HintPath>
       <Private>True</Private>
@@ -83,6 +87,7 @@
       <HintPath>..\packages\System.Reactive.Windows.Threading.3.0.0\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -100,46 +105,58 @@
     <Compile Include="Adapters\IContainerAdapter.cs" />
     <Compile Include="Adapters\ITraceEventAdapter.cs" />
     <Compile Include="Adapters\TraceEventAdapter.cs" />
+    <Compile Include="Commands\CreateErrorLogCommand.cs" />
+    <Compile Include="Commands\CreateDebugLogCommand.cs" />
+    <Compile Include="Commands\CreateLogCommand.cs" />
+    <Compile Include="Commands\Decorators\OneWayAmbientUnitOfWorkDecorator.cs" />
+    <Compile Include="Commands\Handlers\CreateErrorLogCommandHandler.cs" />
+    <Compile Include="Commands\Handlers\CreateDebugLogCommandHandler.cs" />
+    <Compile Include="Commands\Handlers\ICommand.cs" />
+    <Compile Include="Commands\Handlers\ICommandExecutor.cs" />
+    <Compile Include="Commands\Handlers\CommandExecutor.cs" />
+    <Compile Include="Commands\Handlers\IOneWayCommandHandler.cs" />
     <Compile Include="Constants\HostConstants.cs" />
     <Compile Include="Constants\Log4NetConstants.cs" />
     <Compile Include="Consumers\DebugEventConsumer.cs" />
     <Compile Include="Consumers\ErrorEventConsumer.cs" />
     <Compile Include="Consumers\IEventConsumer.cs" />
-    <Compile Include="CustomConfiguration\EventSubscriberConfigurationElement.cs" />
-    <Compile Include="CustomConfiguration\EventSubscriberElementCollection.cs" />
-    <Compile Include="CustomConfiguration\EventSubscribersConfigurationSection.cs" />
-    <Compile Include="Enumerations\DebugProducerType.cs" />
-    <Compile Include="Events\DebugBusTraceReceivedEvent.cs" />
+    <Compile Include="CustomConfiguration\EventProducerConfigurationElement.cs" />
+    <Compile Include="CustomConfiguration\EventProducerElementCollection.cs" />
+    <Compile Include="CustomConfiguration\EventProducersSection.cs" />
+    <Compile Include="EasyLogger.cs" />
+    <Compile Include="DebugProducerType.cs" />
     <Compile Include="Events\DebugTraceReceivedEvent.cs" />
     <Compile Include="Events\ErrorTraceReceivedEvent.cs" />
     <Compile Include="Events\TraceReceivedEvent.cs" />
     <Compile Include="Exensions\ContainerExtensions.cs" />
+    <Compile Include="Dapper\DapperConnection.cs" />
+    <Compile Include="Dapper\DapperConnectionFactory.cs" />
+    <Compile Include="Dapper\IDapperConnection.cs" />
+    <Compile Include="Dapper\IDapperConnectionFactory.cs" />
     <Compile Include="Functions\EventPayloadBuilder.cs" />
+    <Compile Include="Functions\IEventCommandExecutor.cs" />
     <Compile Include="Functions\IEventPayloadBuilder.cs" />
-    <Compile Include="Functions\IStreamLogger.cs" />
     <Compile Include="Functions\ITraceSessionManager.cs" />
+    <Compile Include="Functions\EventCommandExecutor.cs" />
     <Compile Include="Functions\TraceSessionManager.cs" />
     <Compile Include="IServiceHost.cs" />
-    <Compile Include="Payloads\EventPayload.cs" />
-    <Compile Include="Producers\DebugEventProducer.cs" />
-    <Compile Include="Producers\ErrorEventProducer.cs" />
-    <Compile Include="Producers\IDebugEventProducer.cs" />
-    <Compile Include="Producers\IErrorEventProducer.cs" />
+    <Compile Include="Functions\EventPayload.cs" />
     <Compile Include="Producers\IEventProducer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Queues\DebugQueue.cs" />
-    <Compile Include="Queues\ErrorQueue.cs" />
-    <Compile Include="Queues\IDebugQueue.cs" />
-    <Compile Include="Queues\IErrorQueue.cs" />
+    <Compile Include="Providers\ConfigurationProvider.cs" />
+    <Compile Include="Queues\EventQueue.cs" />
+    <Compile Include="Queues\IEventQueue.cs" />
     <Compile Include="ServiceHost.cs" />
-    <Compile Include="Subscribers\EventSubscriber.cs" />
-    <Compile Include="Subscribers\IEventSubscriber.cs" />
-    <Compile Include="Subscribers\StreamLogger.cs" />
+    <Compile Include="Producers\EventProducer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="log4net.config" />
+    <None Include="App.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

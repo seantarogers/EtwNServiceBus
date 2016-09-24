@@ -1,7 +1,7 @@
-﻿using Easy.Logger;
-
-namespace PFTracing.Etw.Host
+﻿namespace Consumer
 {
+    using Easy.Logger;
+
     public static class EasyLogger
     {
         public static void InitializeTypeReference()

@@ -2,28 +2,41 @@
 {
     using System;
 
+    using Adapters;
+    using Constants;
+
+    using Commands;
+    using Commands.Handlers;
+
+    using Queues;
+
+    using Events;
+    using Functions;
+
     using Easy.Logger;
 
     public class DebugEventConsumer : IEventConsumer
     {
         private readonly IContainerAdapter containerAdapter;
-        private readonly IDebugQueueAdapter debugQueue;
-        private readonly IAsiLogger pfTracingAsiLogger;
-
+        private readonly IEventQueue<DebugTraceReceivedEvent> debugQueue;
+        private readonly ILogService logService;
+        private ILogger easyLogger;
         private Action<Exception> raiseErrorInParentThread;
 
         public DebugEventConsumer(
-            IDebugQueueAdapter debugQueue,
-            IAsiLogger pfTracingAsiLogger, 
+            IEventQueue<DebugTraceReceivedEvent> debugQueue,
+            ILogService logService, 
             IContainerAdapter containerAdapter)
         {
             this.debugQueue = debugQueue;
-            this.pfTracingAsiLogger = pfTracingAsiLogger;
+            this.logService = logService;
             this.containerAdapter = containerAdapter;
         }
 
         public void Start()
         {
+            easyLogger = logService.GetLogger(GetType());
+
             try
             {
                 foreach (var debugTraceReceivedEvent in debugQueue.GetConsumingEnumerable())
@@ -33,36 +46,37 @@
             }
             catch (Exception exception)
             {
-                pfTracingAsiLogger.ErrorFormat(this, HostConstants.DebugEventConsumerError, exception);
+                easyLogger.ErrorFormat(HostConstants.DebugEventConsumerError, exception);
                 raiseErrorInParentThread(exception);
             }
         }
 
-        private void SinkEvent(TraceReceivedEvent debugTraceReceivedEvent)
+        private void SinkEvent(TraceReceivedEvent traceReceivedEvent)
         {
             using (containerAdapter.BeginLifetimeScope())
             {
-                var sinkPayload = BuildPayload(debugTraceReceivedEvent);
+                var sinkPayload = BuildPayload(traceReceivedEvent);
                 if (!sinkPayload.IsValid)
                 {
-                    pfTracingAsiLogger.DebugFormat(this, HostConstants.DebugEventWithoutPayload,
-                        debugTraceReceivedEvent.ClientAplicationName);
+                    easyLogger.DebugFormat(HostConstants.DebugEventWithoutPayload, traceReceivedEvent.ClientAplicationName);
                     return;
                 }
 
-                LogDebugEventToRollingFile(sinkPayload, debugTraceReceivedEvent.EasyLogger);
-                LogDebugEventToDatabase(debugTraceReceivedEvent, sinkPayload);
+                LogDebugEventToRollingFile(sinkPayload, traceReceivedEvent.EasyLogger);
+                LogDebugEventToDatabase(traceReceivedEvent, sinkPayload);
             }
         }
 
-        private void LogDebugEventToDatabase(TraceReceivedEvent debugTraceReceivedEvent, EventPayload sinkPayload)
+        private void LogDebugEventToDatabase(
+            TraceReceivedEvent debugTraceReceivedEvent, 
+            EventPayload sinkPayload)
         {
-            var createInfoDebugLogCommandHandler = containerAdapter.GetInstance<IOneWayAmbientUnitOfWorkCommandHandler<CreateInfoDebugCreateLogCommand>>();
-            createInfoDebugLogCommandHandler.Handle(new CreateInfoDebugCreateLogCommand
+            var createInfoDebugLogCommandHandler = containerAdapter.GetInstance<IOneWayCommandHandler<CreateDebugLogCommand>>();
+            createInfoDebugLogCommandHandler.Handle(new CreateDebugLogCommand
             {
                 ClientApplicationName = debugTraceReceivedEvent.ClientAplicationName,
                 EventPayload = sinkPayload
-            });
+            });            
         }
 
         private EventPayload BuildPayload(TraceReceivedEvent debugTraceReceivedEvent)
@@ -77,7 +91,9 @@
             raiseErrorInParentThread = errorAction;
         }
 
-        private static void LogDebugEventToRollingFile(EventPayload eventPayload, ILogger clientApplicationEasyLogger)
+        private static void LogDebugEventToRollingFile(
+            EventPayload eventPayload, 
+            ILogger clientApplicationEasyLogger)
         {
             clientApplicationEasyLogger.DebugFormat("{0} {1} {2}", 
                 eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),

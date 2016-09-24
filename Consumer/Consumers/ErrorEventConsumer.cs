@@ -2,28 +2,41 @@
 {
     using System;
 
+    using Adapters;
+    using Constants;
+
+    using Consumer.Commands;
+    using Consumer.Commands.Handlers;
+
+    using Events;
+    using Functions;
+    using Queues;
+
     using Easy.Logger;
 
     public class ErrorEventConsumer : IEventConsumer
     {
         private readonly IContainerAdapter containerAdapter;
-        private readonly IErrorQueueAdapter errorQueue;
-        private readonly IAsiLogger pfTracingAsiLogger;
+        private readonly IEventQueue<ErrorTraceReceivedEvent> errorQueue;
+        private readonly ILogService logService;
+        private  ILogger easyLogger;
 
         private Action<Exception> raiseErrorInParentThread;
 
         public ErrorEventConsumer(
-            IErrorQueueAdapter errorQueue,
-            IAsiLogger pfTracingAsiLogger, 
-            IContainerAdapter containerAdapter)
+            IEventQueue<ErrorTraceReceivedEvent> errorQueue,
+            IContainerAdapter containerAdapter, 
+            ILogService logService)
         {
             this.errorQueue = errorQueue;
-            this.pfTracingAsiLogger = pfTracingAsiLogger;
             this.containerAdapter = containerAdapter;
+            this.logService = logService;
         }
 
         public void Start()
         {
+            easyLogger = logService.GetLogger(GetType());
+
             try
             {
                 foreach (var errorTraceReceivedEvent in errorQueue.GetConsumingEnumerable())
@@ -33,7 +46,7 @@
             }
             catch (Exception exception)
             {
-                pfTracingAsiLogger.ErrorFormat(this, HostConstants.ErrorEventConsumerError, exception);
+                easyLogger.ErrorFormat(HostConstants.ErrorEventConsumerError, exception);
                 raiseErrorInParentThread(exception);
             }
         }
@@ -45,7 +58,7 @@
                 var eventPayload = CreateEventPayload(errorTraceReceivedEvent);
                 if (!eventPayload.IsValid)
                 {
-                    pfTracingAsiLogger.DebugFormat(this, HostConstants.ErrorEventWithoutPayload,
+                    easyLogger.DebugFormat(HostConstants.ErrorEventWithoutPayload,
                         errorTraceReceivedEvent.ClientAplicationName);
                     return;
                 }
@@ -58,8 +71,8 @@
         private void LogErrorToDatabase(TraceReceivedEvent errorTraceReceivedEvent, EventPayload sinkPayload)
         {
             var commandHandler =
-                containerAdapter.GetInstance<IOneWayAmbientUnitOfWorkCommandHandler<CreateErrorCreateLogCommand>>();
-            commandHandler.Handle(new CreateErrorCreateLogCommand
+                containerAdapter.GetInstance<IOneWayCommandHandler<CreateErrorLogCommand>>();
+            commandHandler.Handle(new CreateErrorLogCommand
             {
                 ClientApplicationName = errorTraceReceivedEvent.ClientAplicationName,
                 EventPayload = sinkPayload

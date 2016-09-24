@@ -32,13 +32,13 @@
 
         public const string LostEventsThisSession = "Session {0} is closing down. This session lost {1} events.";
 
-        public const string DebugStreamCompleted = "The debug event stream has completed";
-        public const string ErrorStreamCompleted = "The error event stream has completed";
+        public const string DebugStreamCompleted = "The debug event stream has completed for source: {0}.";
+        public const string ErrorStreamCompleted = "The error event stream has completed for source: {0}.";
 
         public const string DebugStreamException =
-            "An exception was raised whilst consuming a debug event from the debug event stream. Event processing will now stop. Exception Details: {0}";
+            "An exception was raised whilst consuming a debug event from the debug event stream. Event processing will now stop. Source: {0}, Exception Details: {1}";
 
         public const string ErrorStreamException =
-            "An exception was raised whilst consuming an error event from the error event stream. Event processing will now stop. Exception Details: {0}";
+            "An exception was raised whilst consuming an error event from the error event stream. Event processing will now stop. Source: {0}, Exception Details: {1}";
     }
 }

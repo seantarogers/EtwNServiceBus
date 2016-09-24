@@ -1,8 +1,13 @@
 ﻿namespace Consumer.Producers
 {
+    using System;
+
+    using CustomConfiguration;
+
     public interface IEventProducer
     {
-        void ReceiveNextErrorEvent(ITraceEventAdapter traceEventAdapter);
-        void ReceiveNextDebugEvent(ITraceEventAdapter traceEventAdapter);
+        void Start(EventProducerConfigurationElement eventProducerConfigurationElement);
+        void Stop();
+        void OnError(Action<Exception> errorAction);
     }
 }
