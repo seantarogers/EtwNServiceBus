@@ -1,7 +1,5 @@
 ﻿namespace Consumer.Functions
 {
-    using Consumer.Constants;
-
     using Easy.Logger;
 
     using Microsoft.Diagnostics.Tracing.Session;
@@ -47,8 +45,7 @@
 
                 if (traceEventSession.EventsLost > 0)
                 {
-                    easyLogger.ErrorFormat(HostConstants.LostEventsThisSession, sessionName,
-                        traceEventSession.EventsLost);
+                    easyLogger.Error($"Session {sessionName} is closing down. This session lost {traceEventSession.EventsLost} events.");
                 }
 
                 traceEventSession.Dispose();
@@ -57,7 +54,8 @@
 
         private void DisposeExistingSession(string sessionName)
         {
-            easyLogger.DebugFormat(HostConstants.TracingSessionAlreadyExists, sessionName);
+            easyLogger.Debug($"Tracing session {sessionName} already exists, will remove and create a new one.");
+
             var existingTraceEventSession = new TraceEventSession(sessionName);
             existingTraceEventSession.Dispose();
         }

@@ -3,10 +3,9 @@
     using System;
 
     using Adapters;
-    using Constants;
 
-    using Consumer.Commands;
-    using Consumer.Commands.Handlers;
+    using Commands;
+    using Commands.Handlers;
 
     using Events;
     using Functions;
@@ -46,7 +45,7 @@
             }
             catch (Exception exception)
             {
-                easyLogger.ErrorFormat(HostConstants.ErrorEventConsumerError, exception);
+                easyLogger.Error($"Exception raised whilst consuming from the ErrorQueue. Details: {exception}");
                 raiseErrorInParentThread(exception);
             }
         }
@@ -58,8 +57,7 @@
                 var eventPayload = CreateEventPayload(errorTraceReceivedEvent);
                 if (!eventPayload.IsValid)
                 {
-                    easyLogger.DebugFormat(HostConstants.ErrorEventWithoutPayload,
-                        errorTraceReceivedEvent.ClientAplicationName);
+                    easyLogger.Debug($"ErrorEvent received without a valid payload from clientApplication: {errorTraceReceivedEvent.ClientAplicationName}");
                     return;
                 }
 
@@ -70,8 +68,7 @@
 
         private void LogErrorToDatabase(TraceReceivedEvent errorTraceReceivedEvent, EventPayload sinkPayload)
         {
-            var commandHandler =
-                containerAdapter.GetInstance<IOneWayCommandHandler<CreateErrorLogCommand>>();
+            var commandHandler = containerAdapter.GetInstance<IOneWayCommandHandler<CreateErrorLogCommand>>();
             commandHandler.Handle(new CreateErrorLogCommand
             {
                 ClientApplicationName = errorTraceReceivedEvent.ClientAplicationName,

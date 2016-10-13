@@ -38,15 +38,8 @@
         public bool Start(HostControl hostControl)
         {
             thisHostControl = hostControl;
-            try
-            {
-                SetUpLog4Net();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
+            SetUpLog4Net();
+            
             try
             {
                 CreateContainer();
@@ -117,10 +110,10 @@
             {
                 foreach (var eventProducer in eventProducers)
                 {
-                    var eventSubscriberName = eventProducer.GetType().FullName;
-                    easyLogger.DebugFormat($"Stopping event producer : {eventSubscriberName}");
+                    var producerName = eventProducer.GetType().FullName;
+                    easyLogger.DebugFormat($"Stopping event producer : {producerName}");
                     eventProducer.Stop();
-                    easyLogger.DebugFormat($"Stopped event producer: {eventSubscriberName}");
+                    easyLogger.DebugFormat($"Stopped event producer: {producerName}");
                 }
             }
             catch (Exception exception)

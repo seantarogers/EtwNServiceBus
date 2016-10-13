@@ -1,15 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Provider
 {
-    class Program
+    using Microsoft.Owin.Hosting;
+
+    internal static class Program
     {
         static void Main(string[] args)
         {
+            using (var webHost = WebApp.Start("http://localhost:8093"))
+            {
+                Console.WriteLine("Successfully started the api host on: {0}", "http://localhost:8093");
+                Console.ReadLine();
+            }
         }
     }
 }

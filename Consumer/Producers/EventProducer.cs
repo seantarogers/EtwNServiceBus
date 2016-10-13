@@ -3,7 +3,9 @@
     using System;
 
     using Adapters;
-    using Constants;
+
+    using Consumer.Logger;
+
     using CustomConfiguration;
     using Events;
     using Functions;
@@ -60,8 +62,7 @@
             }
             catch (Exception exception)
             {
-                producerEasyLogger.ErrorFormat( "An exception has been raised in Start(). For Source: {0} Details: {1}",
-                    eventProducerConfiguration.EventSource, exception);
+                producerEasyLogger.Error($"An exception has been raised in Start(). For Event Source: {eventProducerConfiguration.EventSource}, Details: {exception}");
                 raiseErrorInParentThread(exception);
             }
         }
@@ -74,6 +75,7 @@
 
         private void SetUpEasyLoggers()
         {
+            //LogBuilder.Build(eventProducerConfiguration.EasyLoggerName, "DEBUG")
             applicationSourceEasyLogger = logService.GetLogger(eventProducerConfiguration.EasyLoggerName);
             producerEasyLogger = logService.GetLogger(GetType());
         }
@@ -87,24 +89,24 @@
         {
             var errorEventStream = traceEventSession.Source.Dynamic.Observe(
                 eventProducerConfiguration.EventSource,
-                HostConstants.EventTypes.ErrorEvents);
+                "Error");
 
             errorEventStream.Subscribe(
                 traceEvent => AddErrorEventToQueue(new TraceEventAdapter(traceEvent)),
-                exception => producerEasyLogger.ErrorFormat(HostConstants.ErrorStreamException, eventProducerConfiguration.EventSource, exception),
-                () => producerEasyLogger.DebugFormat(HostConstants.ErrorStreamCompleted, eventProducerConfiguration.EventSource));
+                exception => producerEasyLogger.Error($"An exception was raised whilst consuming an error event from the error event stream.Event processing will now stop.Source: {eventProducerConfiguration.EventSource}, Exception Details: {exception}"),
+                () => producerEasyLogger.Debug($"The error event stream has completed for source: {eventProducerConfiguration.EventSource}."));
         }
 
         private void SubscribeToDebugEventStream()
         {
             var debugEventStream = traceEventSession.Source.Dynamic.Observe(
                 eventProducerConfiguration.EventSource,
-                HostConstants.EventTypes.DebugEvents);
+                "Debug");
 
             debugEventStream.Subscribe(
                 traceEvent => AddDebugEventToQueue(new TraceEventAdapter(traceEvent)),
-                exception => producerEasyLogger.ErrorFormat(HostConstants.DebugStreamException, eventProducerConfiguration.EventSource, exception),
-                () => producerEasyLogger.DebugFormat(HostConstants.DebugStreamCompleted, eventProducerConfiguration.EventSource));
+                exception => producerEasyLogger.Error($"An exception was raised whilst consuming a debug event from the debug event stream. Event processing will now stop. Event Source: {eventProducerConfiguration.EventSource}, Details: {exception}"),
+                () => producerEasyLogger.Debug($"The debug event stream has completed for source: {eventProducerConfiguration.EventSource}."));
         }
 
         private void AddErrorEventToQueue(ITraceEventAdapter traceEventAdapter)

@@ -3,7 +3,6 @@
     using System;
 
     using Adapters;
-    using Constants;
 
     using Commands;
     using Commands.Handlers;
@@ -39,14 +38,14 @@
 
             try
             {
-                foreach (var debugTraceReceivedEvent in debugQueue.GetConsumingEnumerable())
+                foreach (var debugEvent in debugQueue.GetConsumingEnumerable())
                 {
-                    SinkEvent(debugTraceReceivedEvent);
+                    SinkEvent(debugEvent);
                 }
             }
             catch (Exception exception)
             {
-                easyLogger.ErrorFormat(HostConstants.DebugEventConsumerError, exception);
+                easyLogger.Error($"Exception raised whilst consuming from the DebugQueue. Details: {exception}");
                 raiseErrorInParentThread(exception);
             }
         }
@@ -58,7 +57,7 @@
                 var sinkPayload = BuildPayload(traceReceivedEvent);
                 if (!sinkPayload.IsValid)
                 {
-                    easyLogger.DebugFormat(HostConstants.DebugEventWithoutPayload, traceReceivedEvent.ClientAplicationName);
+                    easyLogger.Error($"DebugEvent received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
                     return;
                 }
 
