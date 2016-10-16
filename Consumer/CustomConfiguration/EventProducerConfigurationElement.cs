@@ -5,36 +5,24 @@
     public class EventProducerConfigurationElement : ConfigurationElement
     {
         private const string NameProperty = "name";
-        private const string EasyLogggerNameProperty = "easyLoggerName";
         private const string EventSourceProperty = "eventSource";
         private const string ApplicationNameProperty = "applicationName";
+        private const string LogPathProperty = "logPath";
+        private const string LogDebugTracesToDatabaseProperty = "logDebugTracesToDatabase";
 
         [ConfigurationProperty(NameProperty, IsKey = true, IsRequired = true)]
-        public string Name
-        {
-            get { return (string)base[NameProperty]; }
-            set { base[NameProperty] = value; }
-        }
-
-        [ConfigurationProperty(EasyLogggerNameProperty, IsRequired = true)]
-        public string EasyLoggerName
-        {
-            get { return (string)base[EasyLogggerNameProperty]; }
-            set { base[EasyLogggerNameProperty] = value; }
-        }
+        public string Name => (string)base[NameProperty];
 
         [ConfigurationProperty(EventSourceProperty, IsRequired = true)]
-        public string EventSource
-        {
-            get { return (string)base[EventSourceProperty]; }
-            set { base[EventSourceProperty] = value; }
-        }
+        public string EventSource => (string)base[EventSourceProperty];
 
         [ConfigurationProperty(ApplicationNameProperty, IsRequired = true)]
-        public string ApplicationName
-        {
-            get { return (string)base[ApplicationNameProperty]; }
-            set { base[ApplicationNameProperty] = value; }
-        }
+        public string ApplicationName => (string)base[ApplicationNameProperty];
+
+        [ConfigurationProperty(LogPathProperty, IsRequired = true)]
+        public string LogPath => (string)base[LogPathProperty];
+
+        [ConfigurationProperty(LogDebugTracesToDatabaseProperty, IsRequired = true)]
+        public bool LogDebugTracesToDatabase => (bool)base[LogDebugTracesToDatabaseProperty];
     }
 }

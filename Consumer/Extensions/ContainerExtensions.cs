@@ -1,24 +1,21 @@
-﻿namespace Consumer.Exensions
+﻿namespace Consumer.Extensions
 {
     using System.Collections.Generic;
     using System.Configuration;
     using System.Linq;
     using System.Reflection;
 
-    using Adapters;
-
+    using Consumer.Adapters;
     using Consumer.Commands.Decorators;
     using Consumer.Commands.Handlers;
+    using Consumer.Consumers;
     using Consumer.Dapper;
     using Consumer.Events;
-
-    using Consumers;
     using Functions;
-    using Providers;
-
-    using Queues;
-
+    using Logger;
     using Producers;
+    using Providers;
+    using Queues;
 
     using Easy.Logger;
 
@@ -45,6 +42,7 @@
             RegisterManagers(container);
             return container;
         }
+        
 
         private static void RegisterManagers(Container container)
         {
@@ -53,7 +51,7 @@
 
         private static void RegisterProducers(Container container)
         {
-            container.Register<IEventProducer, EventProducer>();
+            container.RegisterSingleton<IEventProducer, EventProducer>();
         }
         
         private static void RegisterConsumers(Container container)
@@ -64,8 +62,7 @@
         private static void RegisterAdapters(Container container)
         {
             container.RegisterSingleton<IContainerAdapter, ContainerAdapter>();
-            container.RegisterSingleton<IEventQueue<DebugTraceReceivedEvent>, EventQueue<DebugTraceReceivedEvent>>();
-            container.RegisterSingleton<IEventQueue<ErrorTraceReceivedEvent>, EventQueue<ErrorTraceReceivedEvent>>();            
+            container.RegisterSingleton<IEventQueue<TraceReceivedEvent>, EventQueue<TraceReceivedEvent>>();
         }
 
         private static void RegisterFactories(Container container)
@@ -87,7 +84,9 @@
         private static void RegisterFunctions(Container container)
         {
             container.RegisterSingleton<ILogService>(() => Log4NetService.Instance);
+            container.RegisterSingleton<ILogInitializer, LogInitializer>();
 
+            container.Register<ICommandExecutor, CommandExecutor>(Lifestyle.Scoped);
             container.Register<IEventCommandExecutor, EventCommandExecutor>(Lifestyle.Scoped);
             container.Register<IEventPayloadBuilder, EventPayloadBuilder>(Lifestyle.Scoped);
         }
@@ -113,6 +112,7 @@
                 c =>
                     {
                         c.ConnectionString = ConfigurationManager.ConnectionStrings["TraceDatabase"].ConnectionString;
+                        c.ScomEventSource = ConfigurationManager.AppSettings["ScomEventSource"];
                     });
         }
     }

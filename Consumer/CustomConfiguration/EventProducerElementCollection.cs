@@ -12,25 +12,13 @@
 
         protected override string ElementName => PropertyName;
 
-        protected override bool IsElementName(string elementName)
-        {
-            return elementName.Equals(PropertyName, StringComparison.InvariantCultureIgnoreCase);
-        }
-        
-        public override bool IsReadOnly()
-        {
-            return false;
-        }
-        
-        protected override ConfigurationElement CreateNewElement()
-        {
-            return new EventProducerConfigurationElement();
-        }
+        protected override bool IsElementName(string elementName) => elementName.Equals(PropertyName, StringComparison.InvariantCultureIgnoreCase);
 
-        protected override object GetElementKey(ConfigurationElement element)
-        {
-            return ((EventProducerConfigurationElement)element).Name;
-        }
+        public override bool IsReadOnly() => false;
+
+        protected override ConfigurationElement CreateNewElement() => new EventProducerConfigurationElement();
+
+        protected override object GetElementKey(ConfigurationElement element) => ((EventProducerConfigurationElement)element).Name;
 
         public EventProducerConfigurationElement this[int idx] => (EventProducerConfigurationElement)BaseGet(idx);
     }

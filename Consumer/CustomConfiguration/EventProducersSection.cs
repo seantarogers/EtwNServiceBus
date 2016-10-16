@@ -10,10 +10,6 @@
         public static EventProducersSection Section { get; } = ConfigurationManager.GetSection(EventProducersSectionName) as EventProducersSection;
 
         [ConfigurationProperty(EventProducersProperty)]
-        public EventProducerElementCollection EventProducerElements
-        {
-            get { return (EventProducerElementCollection) base[EventProducersProperty]; }
-            set { base[EventProducersProperty] = value; }
-        }
+        public EventProducerElementCollection EventProducerElements => (EventProducerElementCollection) base[EventProducersProperty];
     }
 }   

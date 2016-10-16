@@ -4,30 +4,29 @@
 
     using Adapters;
 
-    using Commands;
-    using Commands.Handlers;
-
     using Events;
     using Functions;
     using Queues;
 
     using Easy.Logger;
 
+    using log4net;
+
     public class ErrorEventConsumer : IEventConsumer
     {
         private readonly IContainerAdapter containerAdapter;
-        private readonly IEventQueue<ErrorTraceReceivedEvent> errorQueue;
+        private readonly IEventQueue<TraceReceivedEvent> traceReceivedEventQueue;
         private readonly ILogService logService;
         private  ILogger easyLogger;
 
         private Action<Exception> raiseErrorInParentThread;
 
         public ErrorEventConsumer(
-            IEventQueue<ErrorTraceReceivedEvent> errorQueue,
+            IEventQueue<TraceReceivedEvent> traceReceivedEventQueue,
             IContainerAdapter containerAdapter, 
             ILogService logService)
         {
-            this.errorQueue = errorQueue;
+            this.traceReceivedEventQueue = traceReceivedEventQueue;
             this.containerAdapter = containerAdapter;
             this.logService = logService;
         }
@@ -38,48 +37,16 @@
 
             try
             {
-                foreach (var errorTraceReceivedEvent in errorQueue.GetConsumingEnumerable())
+                foreach (var traceReceivedEvent in traceReceivedEventQueue.GetConsumingEnumerable())
                 {
-                    SinkEvent(errorTraceReceivedEvent);
+                    SinkEvent(traceReceivedEvent);
                 }
             }
             catch (Exception exception)
             {
-                easyLogger.Error($"Exception raised whilst consuming from the ErrorQueue. Details: {exception}");
+                easyLogger.Error($"Exception raised whilst consuming from the error traceReceivedEventQueue. Details: {exception}");
                 raiseErrorInParentThread(exception);
             }
-        }
-
-        private void SinkEvent(TraceReceivedEvent errorTraceReceivedEvent)
-        {
-            using (containerAdapter.BeginLifetimeScope())
-            {
-                var eventPayload = CreateEventPayload(errorTraceReceivedEvent);
-                if (!eventPayload.IsValid)
-                {
-                    easyLogger.Debug($"ErrorEvent received without a valid payload from clientApplication: {errorTraceReceivedEvent.ClientAplicationName}");
-                    return;
-                }
-
-                LogErrorEventToRollingFile(eventPayload, errorTraceReceivedEvent.EasyLogger);
-                LogErrorToDatabase(errorTraceReceivedEvent, eventPayload);
-            }
-        }
-
-        private void LogErrorToDatabase(TraceReceivedEvent errorTraceReceivedEvent, EventPayload sinkPayload)
-        {
-            var commandHandler = containerAdapter.GetInstance<IOneWayCommandHandler<CreateErrorLogCommand>>();
-            commandHandler.Handle(new CreateErrorLogCommand
-            {
-                ClientApplicationName = errorTraceReceivedEvent.ClientAplicationName,
-                EventPayload = sinkPayload
-            });
-        }
-
-        private EventPayload CreateEventPayload(TraceReceivedEvent errorTraceReceivedEvent)
-        {
-            var eventPayloadBuilder = containerAdapter.GetInstance<IEventPayloadBuilder>();
-            return eventPayloadBuilder.Build(errorTraceReceivedEvent.TraceEventAdapter);            
         }
 
         public void OnError(Action<Exception> errorAction)
@@ -87,11 +54,40 @@
             raiseErrorInParentThread = errorAction;
         }
 
-        private static void LogErrorEventToRollingFile(EventPayload eventPayload, ILogger clientApplicationEasyLogger)
+        private void SinkEvent(TraceReceivedEvent traceReceivedEvent)
         {
-            clientApplicationEasyLogger.ErrorFormat("{0} {1} {2}",
-                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
-                eventPayload.TraceSource, eventPayload.Payload);
+            using (containerAdapter.BeginLifetimeScope())
+            {
+                var eventPayload = CreateEventPayload(traceReceivedEvent);
+                if (!eventPayload.IsValid)
+                {
+                    easyLogger.Debug(
+                        $"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
+                    return;
+                }
+
+                var clientApplicationLog = LogManager.GetLogger(traceReceivedEvent.ClientAplicationName);
+
+                SetCustomAdoProperties(traceReceivedEvent);
+
+                clientApplicationLog.ErrorFormat(
+                    "{0} {1} {2}",
+                    eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                    eventPayload.TraceSource,
+                    eventPayload.Payload);
+            }
+        }
+
+        private static void SetCustomAdoProperties(TraceReceivedEvent traceReceivedEvent)
+        {
+            LogicalThreadContext.Properties["LogDate"]  = traceReceivedEvent.TraceEvent.TimeStamp;
+            LogicalThreadContext.Properties["ApplicationName"] = traceReceivedEvent.ClientAplicationName;
+        }
+
+        private EventPayload CreateEventPayload(TraceReceivedEvent errorTraceReceivedEvent)
+        {
+            var eventPayloadBuilder = containerAdapter.GetInstance<IEventPayloadBuilder>();
+            return eventPayloadBuilder.Build(errorTraceReceivedEvent.TraceEvent);            
         }
     }
 }

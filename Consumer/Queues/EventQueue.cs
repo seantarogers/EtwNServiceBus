@@ -21,10 +21,7 @@
             blockingCollection.Add(tEvent);
         }
 
-        public IEnumerable<TEvent> GetConsumingEnumerable()
-        {
-            return blockingCollection.GetConsumingEnumerable();
-        }
+        public IEnumerable<TEvent> GetConsumingEnumerable() => blockingCollection.GetConsumingEnumerable();
 
         public void CompleteAdding()
         {

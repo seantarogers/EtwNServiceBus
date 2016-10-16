@@ -6,6 +6,8 @@
     using System.Text;
     using System.Threading.Tasks;
 
+    using Consumer.Extensions;
+
     using Consumers;
     using Events;
     using Producers;
@@ -14,8 +16,6 @@
     using CustomConfiguration;
 
     using Easy.Logger;
-
-    using Exensions;
 
     using log4net.Config;
     
@@ -27,8 +27,7 @@
     {
         private List<IEventProducer> eventProducers;
         private IEnumerable<IEventConsumer> eventConsumers;
-        private static IEventQueue<DebugTraceReceivedEvent> debugQueue;
-        private static IEventQueue<ErrorTraceReceivedEvent> errorQueue;
+        private static IEventQueue<TraceReceivedEvent> traceQueue;
         private static HostControl thisHostControl;
 
         private ILogger easyLogger;
@@ -88,13 +87,9 @@
         {
             try
             {
-                easyLogger.DebugFormat("Stopping errorQueue");
-                errorQueue?.CompleteAdding();
-                easyLogger.DebugFormat("Stopped errorQueue");
-
-                easyLogger.DebugFormat("Stopping debugQueue");
-                debugQueue?.CompleteAdding();
-                easyLogger.DebugFormat("Stopped debugQueue");                
+                easyLogger.DebugFormat("Stopping traceQueue");
+                traceQueue?.CompleteAdding();
+                easyLogger.DebugFormat("Stopped traceQueue");                
             }
             catch (Exception exception)
             {
@@ -126,8 +121,7 @@
 
         private static void StoreQueuesForlaterDisposal()
         {
-            debugQueue = Container.GetInstance<IEventQueue<DebugTraceReceivedEvent>>();
-            errorQueue = Container.GetInstance<IEventQueue<ErrorTraceReceivedEvent>>();
+            traceQueue = Container.GetInstance<IEventQueue<TraceReceivedEvent>>();
         }
 
         private void StartEventProducers()
@@ -178,7 +172,8 @@
         {
             Container = new Container();
             Container.UseLifetimeScopeLifestyle();
-            Container.RegisterComponents();            
+            Container.RegisterComponents();    
+            Container.Verify();        
         }
 
         private void SetUpLog4Net()

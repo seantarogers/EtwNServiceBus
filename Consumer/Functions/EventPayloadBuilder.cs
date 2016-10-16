@@ -6,6 +6,8 @@
 
     using Adapters;
 
+    using Extensions;
+
     public class EventPayloadBuilder : IEventPayloadBuilder
     {
         private const string TraceSourceItemName = "source";
@@ -25,6 +27,7 @@
 
             return new EventPayload
             {
+                EventLevel = traceEventAdapter.EventName.ToEventLevel(),
                 TraceDate = traceEventAdapter.TimeStamp,
                 TraceSource = traceSource,
                 IsValid = true,
@@ -51,10 +54,8 @@
             return stringBuilder.ToString().Trim();
         }
 
-        private static bool IsSourceItem(ITraceEventAdapter traceEventAdapter, int i)
-        {
-            return traceEventAdapter.PayloadNames[i].Equals(TraceSourceItemName, StringComparison.OrdinalIgnoreCase);
-        }
+        private static bool IsSourceItem(ITraceEventAdapter traceEventAdapter, int i) => 
+            traceEventAdapter.PayloadNames[i].Equals(TraceSourceItemName, StringComparison.OrdinalIgnoreCase);
 
         private static bool TryGetTraceSource(ITraceEventAdapter traceEventAdapter, out string traceSource)
         {
@@ -69,9 +70,7 @@
             return !string.IsNullOrWhiteSpace(traceSource);
         }
 
-        private static bool PayloadIsEmpty(ITraceEventAdapter traceEventAdapter)
-        {
-            return traceEventAdapter.PayloadNames == null || !traceEventAdapter.PayloadNames.Any();
-        }
+        private static bool PayloadIsEmpty(ITraceEventAdapter traceEventAdapter) => 
+            traceEventAdapter.PayloadNames == null || !traceEventAdapter.PayloadNames.Any();
     }
 }
