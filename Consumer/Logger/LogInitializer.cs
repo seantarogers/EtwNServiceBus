@@ -64,12 +64,10 @@
             var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
             logger.AddAppender(eventLogAppender);
             logger.Repository.Configured = true;
-
         }
 
         private IAppender CreateAdoAppender(Level level)
         {
-
             var logDate = new AdoNetAppenderParameter {
                                                       ParameterName = "@LogDate",
                                                       DbType = DbType.DateTime

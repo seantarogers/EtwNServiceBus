@@ -27,7 +27,7 @@
         private TraceEventSession traceEventSession;
         private Action<Exception> raiseErrorInParentThread;
 
-        private const string Session = "session";
+        private const string Session = "-Session";
 
         public EventProducer(
             ILogService logService,
@@ -78,7 +78,7 @@
 
         private void SubscribeToDebugTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, "debug");
+            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, "Debug");
 
             eventStream.Subscribe(
                 traceEvent => AddDebugEventToQueue(new TraceEventAdapter(traceEvent)),
@@ -90,7 +90,7 @@
 
         private void SubscribeToErrorTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, "error");
+            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, "Error");
 
             eventStream.Subscribe(
                 traceEvent => AddErrorEventToQueue(new TraceEventAdapter(traceEvent)),

@@ -1,18 +1,31 @@
-﻿using System;
-
-namespace Provider
+﻿namespace Provider
 {
-    using Microsoft.Owin.Hosting;
+    using Topshelf;
 
     internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            using (var webHost = WebApp.Start("http://localhost:8093"))
-            {
-                Console.WriteLine("Successfully started the api host on: {0}", "http://localhost:8093");
-                Console.ReadLine();
-            }
+            const string serviceName = "NServiceBusETWEventProvider";
+
+            HostFactory.Run(
+                x =>
+                {
+                    x.Service<IServiceHost>(
+                        s =>
+                        {
+                            s.ConstructUsing(pc => new ServiceHost());
+                            s.WhenStarted((pc, hostControl) => pc.Start(hostControl));
+                            s.WhenStopped(pc => pc.Stop());
+                        });
+                    x.RunAsLocalSystem();
+
+                    x.SetDescription(serviceName);
+                    x.SetDisplayName(serviceName);
+                    x.SetServiceName(serviceName);
+
+                    x.StartAutomaticallyDelayed();
+                });
         }
     }
 }
