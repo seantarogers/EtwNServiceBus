@@ -12,7 +12,7 @@
     using Consumer.Dapper;
     using Consumer.Events;
     using Functions;
-    using Logger;
+
     using Producers;
     using Providers;
     using Queues;
@@ -51,7 +51,7 @@
 
         private static void RegisterProducers(Container container)
         {
-            container.RegisterSingleton<IEventProducer, EventProducer>();
+            container.Register<IEventProducer, EventProducer>();
         }
         
         private static void RegisterConsumers(Container container)

@@ -3,18 +3,21 @@
     using System;
 
     using Functions;
+
+    using static Consumer.Constants.HostConstants;
+
     using static Functions.EventLevelType;
 
     public static class StringExtensions
     {
         public static EventLevelType ToEventLevel(this string eventName)
         {
-            if (eventName == "debug")
+            if (eventName == DebugLevel)
             {
                 return Debug;
             }
 
-            if (eventName == "error")
+            if (eventName == ErrorLevel)
             {
                 return Error;
             }

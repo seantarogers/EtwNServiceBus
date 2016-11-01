@@ -80,7 +80,8 @@
 
         private static void SetCustomAdoProperties(TraceReceivedEvent traceReceivedEvent)
         {
-            LogicalThreadContext.Properties["LogDate"]  = traceReceivedEvent.TraceEvent.TimeStamp;
+            LogicalThreadContext.Properties["Logger"] = traceReceivedEvent.ProducerName;
+            LogicalThreadContext.Properties["LogDate"] = traceReceivedEvent.TraceEvent.TimeStamp;
             LogicalThreadContext.Properties["ApplicationName"] = traceReceivedEvent.ClientAplicationName;
         }
 

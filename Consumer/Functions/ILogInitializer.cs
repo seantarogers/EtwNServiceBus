@@ -1,4 +1,4 @@
-namespace Consumer.Logger
+namespace Consumer.Functions
 {
     public interface ILogInitializer
     {

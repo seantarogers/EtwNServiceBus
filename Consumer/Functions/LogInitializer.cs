@@ -1,8 +1,8 @@
-﻿namespace Consumer.Logger {
+﻿namespace Consumer.Functions {
     using System.Data;
     using System.Diagnostics;
 
-    using Providers;
+    using Consumer.Providers;
 
     using log4net;
     using log4net.Appender;
@@ -35,13 +35,12 @@
             logger.AddAppender(rollingFileAppender);
 
             // only log bus errors to sql, not debug as it is too noisy
-            var adoNetAppender = CreateAdoAppender(Level.Error);
+            var adoNetAppender = CreateAdoAppender(Level.Error, "[dbo].[usp_Create_ErrorLog]");
             logger.AddAppender(adoNetAppender);
 
             var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
             logger.AddAppender(eventLogAppender);
             logger.Repository.Configured = true;
-
         }
 
         public void InitializeForDebugDatabaseLogging(string logFileName, string applicationName)
@@ -58,53 +57,72 @@
             var debugRollingFileAppender = CreateRollingFileAppender(applicationName, logFileName);
             logger.AddAppender(debugRollingFileAppender);
 
-            var adoNetAppender = CreateAdoAppender(Level.Debug);
-            logger.AddAppender(adoNetAppender);
+            var debugAdoAppender = CreateAdoAppender(Level.Debug, "[dbo].[usp_Create_InfoDebugLog]");
+            logger.AddAppender(debugAdoAppender);
+
+            var errorAdoAppender = CreateAdoAppender(Level.Error, "[dbo].[usp_Create_ErrorLog]");
+            logger.AddAppender(errorAdoAppender);
 
             var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
             logger.AddAppender(eventLogAppender);
             logger.Repository.Configured = true;
         }
 
-        private IAppender CreateAdoAppender(Level level)
+        private IAppender CreateAdoAppender(Level level, string sprocName)
         {
-            var logDate = new AdoNetAppenderParameter {
-                                                      ParameterName = "@LogDate",
-                                                      DbType = DbType.DateTime
-                                                  };
-
-
             var rawLayoutConverter = new RawLayoutConverter();
+
+            var logDate = new AdoNetAppenderParameter
+            {
+                ParameterName = "@LogDate",
+                DbType = DbType.DateTime,
+                Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%property{LogDate}"))
+            };
+
+            var logger = new AdoNetAppenderParameter
+            {
+                ParameterName = "@Logger",
+                DbType = DbType.String,
+                Size = 255,
+                Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%property{Logger}"))
+            };
+
             var logMessage = new AdoNetAppenderParameter {
                 ParameterName = "@LogMessage",
                 DbType = DbType.String,
                 Size = 8000,
                 Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%message"))
             };
-            
-            var applicationName = new AdoNetAppenderParameter {
-                                                     ParameterName = "@ApplicationName",
-                                                     DbType = DbType.String,
-                                                     Size = 255
-                                                 };
+
+            var applicationName = new AdoNetAppenderParameter
+                                      {
+                                          ParameterName = "@ApplicationName",
+                                          DbType = DbType.String,
+                                          Size = 100,
+                                          Layout =
+                                              (IRawLayout)
+                                              rawLayoutConverter.ConvertFrom(
+                                                  new PatternLayout("%property{ApplicationName}"))
+                                      };
+
 
             const string connectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version = 1.0.3300.0, Culture = neutral, PublicKeyToken = b77a5c561934e089";
             var adoNetAppender = new AdoNetAppender
-                             {
-                                 BufferSize = 1,
-                                 CommandType = CommandType.StoredProcedure,
-                                 ConnectionType = connectionType,
-                                 ConnectionString = configurationProvider.ConnectionString,
-                                 CommandText = "usp_Create_ErrorLog"
-                             };
-            
+            {
+                BufferSize = 1,
+                CommandType = CommandType.StoredProcedure,
+                ConnectionType = connectionType,
+                ConnectionString = configurationProvider.ConnectionString,
+                CommandText = sprocName
+            };
+
             adoNetAppender.AddParameter(logDate);
+            adoNetAppender.AddParameter(logger);
             adoNetAppender.AddParameter(logMessage);
             adoNetAppender.AddParameter(applicationName);
             
             adoNetAppender.ActivateOptions();
-
-
+            
             var levelMatchFilter = new LevelMatchFilter { AcceptOnMatch = true, LevelToMatch = level };
             adoNetAppender.AddFilter(levelMatchFilter);
 

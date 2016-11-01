@@ -143,8 +143,8 @@
     <Compile Include="Functions\TraceSessionManager.cs" />
     <Compile Include="IServiceHost.cs" />
     <Compile Include="Functions\EventPayload.cs" />
-    <Compile Include="Logger\ILogInitializer.cs" />
-    <Compile Include="Logger\LogInitializer.cs" />
+    <Compile Include="Functions\ILogInitializer.cs" />
+    <Compile Include="Functions\LogInitializer.cs" />
     <Compile Include="Producers\IEventProducer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
