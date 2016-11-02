@@ -3,14 +3,24 @@
     using System;
     using System.Web.Http;
 
-    public class MatchController : ApiController
+    using EventSources;
+
+    public class TestController : ApiController
     {
-        
+        private readonly IApplicationEventSource applicationEventSource;
+
+        public TestController(IApplicationEventSource applicationEventSource)
+        {
+            this.applicationEventSource = applicationEventSource;
+        }
+
         [Route("api/test")]
         public IHttpActionResult Get()
         {
-            throw new NotImplementedException();
+            applicationEventSource.DebugFormat(this, "Debug statement from the Match controller on {0}", DateTime.Now.ToShortDateString());
+            applicationEventSource.ErrorFormat(this, "Error statement from the Match controller on {0}", DateTime.Now.ToShortDateString());
             
-        }        
+            return Ok();
+        }
     }
 }

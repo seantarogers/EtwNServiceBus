@@ -2,7 +2,7 @@
     using System.Data;
     using System.Diagnostics;
 
-    using Consumer.Providers;
+    using Providers;
 
     using log4net;
     using log4net.Appender;
@@ -12,7 +12,7 @@
     using log4net.Repository.Hierarchy;
     using log4net.Util;
 
-    public  class LogInitializer : ILogInitializer
+    public class LogInitializer : ILogInitializer
     {
         private readonly ConfigurationProvider configurationProvider;
 
@@ -21,7 +21,7 @@
             this.configurationProvider = configurationProvider;
         }
 
-        public void InitializeForErrorDatabaseLogging(string logFileName, string applicationName)
+        public void InitializeForErrorDatabaseLogging(string rollingLogFilePath, string applicationName, string rollingLogFileName)
         {
             LogLog.InternalDebugging = true;
             var log = LogManager.GetLogger(applicationName);
@@ -31,7 +31,7 @@
             const string levelName = "ALL";
             logger.Level = logger.Hierarchy.LevelMap[levelName];
 
-            var rollingFileAppender = CreateRollingFileAppender(applicationName, logFileName);
+            var rollingFileAppender = CreateRollingFileAppender(applicationName, rollingLogFilePath, rollingLogFileName);
             logger.AddAppender(rollingFileAppender);
 
             // only log bus errors to sql, not debug as it is too noisy
@@ -43,7 +43,7 @@
             logger.Repository.Configured = true;
         }
 
-        public void InitializeForDebugDatabaseLogging(string logFileName, string applicationName)
+        public void InitializeForDebugDatabaseLogging(string rollingLogFilePath, string applicationName, string rollingLogFileName)
         {
             LogLog.InternalDebugging = true;
             var log = LogManager.GetLogger(applicationName);
@@ -54,7 +54,7 @@
 
             logger.Level = logger.Hierarchy.LevelMap[levelName];
 
-            var debugRollingFileAppender = CreateRollingFileAppender(applicationName, logFileName);
+            var debugRollingFileAppender = CreateRollingFileAppender(applicationName, rollingLogFilePath, rollingLogFileName);
             logger.AddAppender(debugRollingFileAppender);
 
             var debugAdoAppender = CreateAdoAppender(Level.Debug, "[dbo].[usp_Create_InfoDebugLog]");
@@ -105,7 +105,6 @@
                                                   new PatternLayout("%property{ApplicationName}"))
                                       };
 
-
             const string connectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version = 1.0.3300.0, Culture = neutral, PublicKeyToken = b77a5c561934e089";
             var adoNetAppender = new AdoNetAppender
             {
@@ -120,34 +119,37 @@
             adoNetAppender.AddParameter(logger);
             adoNetAppender.AddParameter(logMessage);
             adoNetAppender.AddParameter(applicationName);
-            
-            adoNetAppender.ActivateOptions();
+
+            var levelRangeFilter = new LevelRangeFilter { LevelMin = level, LevelMax = level };
+            adoNetAppender.AddFilter(levelRangeFilter);
             
             var levelMatchFilter = new LevelMatchFilter { AcceptOnMatch = true, LevelToMatch = level };
             adoNetAppender.AddFilter(levelMatchFilter);
-
             adoNetAppender.ActivateOptions();
             return adoNetAppender;
         }
 
-        private static IAppender CreateRollingFileAppender(string loggerName, string fileName)
+        private static IAppender CreateRollingFileAppender(
+            string applicationName, 
+            string rollingLogFilePath, 
+            string rollingLogFileName)
         {
             var appender = new RollingFileAppender
             {
-                Name = loggerName + "RollingFileAppender",
-                File = fileName,
+                Name = applicationName + "RollingFileAppender",
+                File = rollingLogFilePath,
                 RollingStyle = RollingFileAppender.RollingMode.Date,
                 MaxSizeRollBackups = 5,
                 MaxFileSize = 31457280, // 30mb
                 AppendToFile = true,
                 ImmediateFlush = true,
                 PreserveLogFileNameExtension = true,
-                DatePattern = "yyyy-MM-dd'-application-all.log'",
+                DatePattern = $"yyyy-MM-dd'-{rollingLogFileName}-all.log'",
             };
 
             var levelMatchFilter = new LevelMatchFilter { AcceptOnMatch = true, LevelToMatch = Level.All };
             appender.AddFilter(levelMatchFilter);
-
+            
             //received event already contains full trace so just populate message
             var layout = new PatternLayout { ConversionPattern = "%newline %level %message " };
             appender.Layout = layout;

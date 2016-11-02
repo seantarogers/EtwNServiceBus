@@ -27,11 +27,19 @@ namespace Provider
 
         public bool Start(HostControl topshelfHostControl)
         {
-            StartNServiceBusEndpoint();
-            StartOwinWebHost();
+            try
+            {
+                StartNServiceBusEndpoint();
+                StartOwinWebHost();
 
-            var applicationEventSource = new ApplicationEventSource();
-            applicationEventSource.DebugFormat(this, "successfully started event provider");
+                var applicationEventSource = new ApplicationEventSource();
+                applicationEventSource.DebugFormat(this, "successfully started event provider");
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                return false;
+            }
 
             return true;
         }
@@ -55,12 +63,12 @@ namespace Provider
             Container = CreateContainer();
 
             SetUpNServiceBusEtwLogger();
-            var endpointConfiguration = CreateEndpointConfiguration(Container);
-            EndpointInstance = Endpoint.Start(endpointConfiguration).Result;
 
-            var containerRegisterBusConfig = new ContainerBuilder();
-            containerRegisterBusConfig.RegisterInstance(EndpointInstance);
-            containerRegisterBusConfig.Update(Container);
+            var endpointConfiguration = CreateSendOnlyEndpointConfiguration(Container);
+            EndpointInstance = Endpoint.Start(endpointConfiguration).Result;
+            var containerBuilder = new ContainerBuilder();
+            containerBuilder.RegisterInstance(EndpointInstance);
+            containerBuilder.Update(Container);
         }
 
         private static void SetUpNServiceBusEtwLogger()
@@ -69,9 +77,9 @@ namespace Provider
             loggerDefinition.Initialize(new BusEventSource(), LogLevel.Debug);
         }
 
-        private static EndpointConfiguration CreateEndpointConfiguration(IContainer container)
+        private static EndpointConfiguration CreateSendOnlyEndpointConfiguration(ILifetimeScope container)
         {
-            var endpointConfiguration = new EndpointConfiguration("Saga");
+            var endpointConfiguration = new EndpointConfiguration("Provider");
             endpointConfiguration.UseSerialization<JsonSerializer>();
             endpointConfiguration.UseContainer<AutofacBuilder>(c => c.ExistingLifetimeScope(container));
             endpointConfiguration.DisableFeature<MessageDrivenSubscriptions>();
@@ -88,6 +96,9 @@ namespace Provider
         {
             var containerBuilder = new ContainerBuilder();
             containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+            containerBuilder.RegisterType<ApplicationEventSource>()
+                .As<IApplicationEventSource>()
+                .SingleInstance();
             return containerBuilder.Build();
         }
     }

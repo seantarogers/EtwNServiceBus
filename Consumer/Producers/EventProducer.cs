@@ -11,8 +11,6 @@
 
     using Easy.Logger;
 
-    using log4net;
-
     using Microsoft.Diagnostics.Tracing;
     using Microsoft.Diagnostics.Tracing.Session;
 
@@ -107,14 +105,16 @@
             if (eventProducerConfiguration.LogDebugTracesToDatabase)
             {
                 logInitializer.InitializeForDebugDatabaseLogging(
-                    eventProducerConfiguration.LogPath,
-                    eventProducerConfiguration.ApplicationName);
+                    eventProducerConfiguration.RollingLogPath,
+                    eventProducerConfiguration.ApplicationName,
+                    eventProducerConfiguration.RollingLogFileName);
             }
             else
             {
                 logInitializer.InitializeForErrorDatabaseLogging(
-                    eventProducerConfiguration.LogPath,
-                    eventProducerConfiguration.ApplicationName);
+                    eventProducerConfiguration.RollingLogPath,
+                    eventProducerConfiguration.ApplicationName,
+                    eventProducerConfiguration.RollingLogFileName);
             }
 
             producerEasyLogger = logService.GetLogger(GetType());
@@ -122,8 +122,6 @@
 
         private void AddErrorEventToQueue(ITraceEventAdapter traceEventAdapter)
         {
-
-
             traceReceivedEventQueue.Add(
                 new ErrorTraceReceivedEvent
                     {
