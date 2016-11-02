@@ -4,7 +4,7 @@
 
     using Functions;
 
-    using static Consumer.Constants.HostConstants;
+    using static Consumer.Constants.ConsumerConstants;
 
     using static Functions.EventLevelType;
 

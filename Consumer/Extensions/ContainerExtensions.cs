@@ -5,12 +5,12 @@
     using System.Linq;
     using System.Reflection;
 
-    using Consumer.Adapters;
-    using Consumer.Commands.Decorators;
-    using Consumer.Commands.Handlers;
-    using Consumer.Consumers;
-    using Consumer.Dapper;
-    using Consumer.Events;
+    using Adapters;
+    using Commands.Decorators;
+    using Commands.Handlers;
+    using Consumers;
+    using Dapper;
+    using Events;
     using Functions;
 
     using Producers;
