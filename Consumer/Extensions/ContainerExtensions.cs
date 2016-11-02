@@ -88,7 +88,7 @@
 
             container.Register<ICommandExecutor, CommandExecutor>(Lifestyle.Scoped);
             container.Register<IEventCommandExecutor, EventCommandExecutor>(Lifestyle.Scoped);
-            container.Register<IEventPayloadBuilder, EventPayloadBuilder>(Lifestyle.Scoped);
+            container.RegisterSingleton<IEventPayloadBuilder, EventPayloadBuilder>();
         }
 
         private static void RegisterCollectionOfSingletons<TInterface>(Container container) where TInterface : class

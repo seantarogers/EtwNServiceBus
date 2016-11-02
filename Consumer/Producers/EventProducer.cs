@@ -11,11 +11,14 @@
 
     using Easy.Logger;
 
+    using log4net;
+
     using Microsoft.Diagnostics.Tracing;
     using Microsoft.Diagnostics.Tracing.Session;
 
     public class EventProducer : IEventProducer
     {
+        private readonly IEventPayloadBuilder eventPayloadBuilder;
         private readonly ILogInitializer logInitializer;
         private readonly ILogService logService;
         private readonly IEventQueue<TraceReceivedEvent> traceReceivedEventQueue;
@@ -31,12 +34,14 @@
             ILogService logService,
             IEventQueue<TraceReceivedEvent> traceReceivedEventQueue,
             ITraceSessionManager traceSessionManager,
-            ILogInitializer logInitializer)
+            ILogInitializer logInitializer, 
+            IEventPayloadBuilder eventPayloadBuilder)
         {
             this.logService = logService;
             this.traceReceivedEventQueue = traceReceivedEventQueue;
             this.traceSessionManager = traceSessionManager;
             this.logInitializer = logInitializer;
+            this.eventPayloadBuilder = eventPayloadBuilder;
         }
 
         public void Start(EventProducerConfigurationElement eventProducerConfigurationElement)
@@ -122,24 +127,49 @@
 
         private void AddErrorEventToQueue(ITraceEventAdapter traceEventAdapter)
         {
-            traceReceivedEventQueue.Add(
-                new ErrorTraceReceivedEvent
-                    {
-                        ProducerName = eventProducerConfiguration.Name,
-                        ClientAplicationName = eventProducerConfiguration.ApplicationName,
-                        TraceEvent = traceEventAdapter
-                    });
+            var eventPayload = CreateEventPayload(traceEventAdapter);
+            if (!eventPayload.IsValid)
+            {
+                //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
+                return;
+            }
+
+            var clientApplicationLog = LogManager.GetLogger(eventProducerConfiguration.ApplicationName);
+            SetCustomAdoProperties(traceEventAdapter);
+
+            clientApplicationLog.ErrorFormat(
+                "{0} {1} {2}",
+                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                eventPayload.TraceSource,
+                eventPayload.Payload);
         }
+
+        private void SetCustomAdoProperties(ITraceEventAdapter traceEventAdapter)
+        {
+            LogicalThreadContext.Properties["Logger"] = eventProducerConfiguration.Name;
+            LogicalThreadContext.Properties["LogDate"] = traceEventAdapter.TimeStamp;
+            LogicalThreadContext.Properties["ApplicationName"] = eventProducerConfiguration.ApplicationName;
+        }
+
+        private EventPayload CreateEventPayload(ITraceEventAdapter traceEventAdapter) => eventPayloadBuilder.Build(traceEventAdapter);
 
         private void AddDebugEventToQueue(ITraceEventAdapter traceEventAdapter)
         {
-            traceReceivedEventQueue.Add(
-                new DebugTraceReceivedEvent
-                    {
-                        ProducerName = eventProducerConfiguration.Name,
-                        ClientAplicationName = eventProducerConfiguration.ApplicationName,
-                        TraceEvent = traceEventAdapter
-                    });
+            var eventPayload = CreateEventPayload(traceEventAdapter);
+            if (!eventPayload.IsValid)
+            {
+                //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
+                return;
+            }
+
+            var clientApplicationLog = LogManager.GetLogger(eventProducerConfiguration.ApplicationName);
+            SetCustomAdoProperties(traceEventAdapter);
+
+            clientApplicationLog.DebugFormat(
+                "{0} {1} {2}",
+                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                eventPayload.TraceSource,
+                eventPayload.Payload);
         }
     }
 }

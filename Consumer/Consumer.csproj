@@ -116,7 +116,6 @@
     <Compile Include="Commands\Handlers\CommandExecutor.cs" />
     <Compile Include="Commands\Handlers\IOneWayCommandHandler.cs" />
     <Compile Include="Constants\HostConstants.cs" />
-    <Compile Include="Constants\Log4NetConstants.cs" />
     <Compile Include="Consumers\DebugEventConsumer.cs" />
     <Compile Include="Consumers\ErrorEventConsumer.cs" />
     <Compile Include="Consumers\IEventConsumer.cs" />
