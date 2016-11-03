@@ -12,74 +12,88 @@
     using log4net.Repository.Hierarchy;
     using log4net.Util;
 
-    public class LogInitializer : ILogInitializer
+    public class LoggerBuilder : ILoggerBuilder
     {
         private readonly ConfigurationProvider configurationProvider;
 
-        public LogInitializer(ConfigurationProvider configurationProvider)
+        private const string CreateErrorSprocName = "[dbo].[usp_Create_ErrorLog]";
+
+        private const string LevelName = "ALL";
+
+        public LoggerBuilder(ConfigurationProvider configurationProvider)
         {
             this.configurationProvider = configurationProvider;
         }
 
-        public void InitializeForErrorDatabaseLogging(string rollingLogFilePath, string applicationName, string rollingLogFileName)
+        public ILog BuildForBusLogging(
+            string rollingLogFilePath,
+            string applicationName,
+            string rollingLogFileName)
         {
             LogLog.InternalDebugging = true;
             var log = LogManager.GetLogger(applicationName);
             var logger = (Logger)log.Logger;
             logger.Additivity = false;
-
-            const string levelName = "ALL";
-            logger.Level = logger.Hierarchy.LevelMap[levelName];
+            
+            logger.Level = logger.Hierarchy.LevelMap[LevelName];
 
             var rollingFileAppender = CreateRollingFileAppender(applicationName, rollingLogFilePath, rollingLogFileName);
             logger.AddAppender(rollingFileAppender);
 
-            // only log bus errors to sql, not debug as it is too noisy
-            var adoNetAppender = CreateAdoAppender(Level.Error, "[dbo].[usp_Create_ErrorLog]");
+            // only log bus errors to sql, 
+            // do not log bus debug statements to sql as it will be too noisy
+            var adoNetAppender = CreateAdoAppender(Level.Error, CreateErrorSprocName);
             logger.AddAppender(adoNetAppender);
 
             var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
             logger.AddAppender(eventLogAppender);
             logger.Repository.Configured = true;
+
+            return log;
         }
 
-        public void InitializeForDebugDatabaseLogging(string rollingLogFilePath, string applicationName, string rollingLogFileName)
+        public ILog BuildForApplicationLogging(
+            string rollingLogFilePath,
+            string applicationName, 
+            string rollingLogFileName)
         {
             LogLog.InternalDebugging = true;
+
             var log = LogManager.GetLogger(applicationName);
             var logger = (Logger)log.Logger;
             logger.Additivity = false;
-
-            const string levelName = "ALL";
-
-            logger.Level = logger.Hierarchy.LevelMap[levelName];
+            
+            logger.Level = logger.Hierarchy.LevelMap[LevelName];
 
             var debugRollingFileAppender = CreateRollingFileAppender(applicationName, rollingLogFilePath, rollingLogFileName);
             logger.AddAppender(debugRollingFileAppender);
 
-            var debugAdoAppender = CreateAdoAppender(Level.Debug, "[dbo].[usp_Create_InfoDebugLog]");
+            const string createInfoLogSprocName = "[dbo].[usp_Create_InfoDebugLog]";
+            var debugAdoAppender = CreateAdoAppender(Level.Debug, createInfoLogSprocName);
             logger.AddAppender(debugAdoAppender);
 
-            var errorAdoAppender = CreateAdoAppender(Level.Error, "[dbo].[usp_Create_ErrorLog]");
+            var errorAdoAppender = CreateAdoAppender(Level.Error, CreateErrorSprocName);
             logger.AddAppender(errorAdoAppender);
 
             var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
             logger.AddAppender(eventLogAppender);
             logger.Repository.Configured = true;
+
+            return log;
         }
 
         private IAppender CreateAdoAppender(Level level, string sprocName)
         {
             var rawLayoutConverter = new RawLayoutConverter();
 
-            var logDate = new AdoNetAppenderParameter
+            var logDateParameter = new AdoNetAppenderParameter
             {
                 ParameterName = "@LogDate",
                 DbType = DbType.DateTime,
                 Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%property{LogDate}"))
             };
 
-            var logger = new AdoNetAppenderParameter
+            var loggerParameter = new AdoNetAppenderParameter
             {
                 ParameterName = "@Logger",
                 DbType = DbType.String,
@@ -87,38 +101,38 @@
                 Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%property{Logger}"))
             };
 
-            var logMessage = new AdoNetAppenderParameter {
+            var logMessageParameter = new AdoNetAppenderParameter {
                 ParameterName = "@LogMessage",
                 DbType = DbType.String,
                 Size = 8000,
                 Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%message"))
             };
 
-            var applicationName = new AdoNetAppenderParameter
+            var applicationNameParameter = new AdoNetAppenderParameter
                                       {
                                           ParameterName = "@ApplicationName",
                                           DbType = DbType.String,
                                           Size = 100,
-                                          Layout =
-                                              (IRawLayout)
-                                              rawLayoutConverter.ConvertFrom(
-                                                  new PatternLayout("%property{ApplicationName}"))
+                                          Layout = (IRawLayout)rawLayoutConverter.ConvertFrom(new PatternLayout("%property{ApplicationName}"))
                                       };
 
-            const string connectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version = 1.0.3300.0, Culture = neutral, PublicKeyToken = b77a5c561934e089";
+            const string connectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version = 1.0.3300.0, "
+                                          + "Culture = neutral, PublicKeyToken = b77a5c561934e089";
+
+            
             var adoNetAppender = new AdoNetAppender
             {
-                BufferSize = 1,
+                BufferSize = 1, //keep this at one for the time being
                 CommandType = CommandType.StoredProcedure,
                 ConnectionType = connectionType,
                 ConnectionString = configurationProvider.ConnectionString,
                 CommandText = sprocName
             };
 
-            adoNetAppender.AddParameter(logDate);
-            adoNetAppender.AddParameter(logger);
-            adoNetAppender.AddParameter(logMessage);
-            adoNetAppender.AddParameter(applicationName);
+            adoNetAppender.AddParameter(logDateParameter);
+            adoNetAppender.AddParameter(loggerParameter);
+            adoNetAppender.AddParameter(logMessageParameter);
+            adoNetAppender.AddParameter(applicationNameParameter);
 
             var levelRangeFilter = new LevelRangeFilter { LevelMin = level, LevelMax = level };
             adoNetAppender.AddFilter(levelRangeFilter);
@@ -126,6 +140,7 @@
             var levelMatchFilter = new LevelMatchFilter { AcceptOnMatch = true, LevelToMatch = level };
             adoNetAppender.AddFilter(levelMatchFilter);
             adoNetAppender.ActivateOptions();
+
             return adoNetAppender;
         }
 
@@ -174,7 +189,7 @@
                                    ApplicationName = applicationName,
                                };
 
-            // only log errors to the windows event log, not debugs as these entries generate scoms
+            // only log errors to the windows event log, not debugs as these entries generate scom alerts
             var levelMatchFilter = new LevelMatchFilter { AcceptOnMatch = true, LevelToMatch = Level.Error };
             appender.AddFilter(levelMatchFilter);
             var layout = new PatternLayout { ConversionPattern = "%newline %level contents: %message" };

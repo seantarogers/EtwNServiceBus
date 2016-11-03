@@ -1,21 +1,13 @@
 ﻿namespace Consumer.Extensions
 {
-    using System.Collections.Generic;
     using System.Configuration;
-    using System.Linq;
-    using System.Reflection;
 
-    using Adapters;
-    using Commands.Decorators;
-    using Commands.Handlers;
     using Consumers;
-    using Dapper;
-    using Events;
+
     using Functions;
 
     using Producers;
     using Providers;
-    using Queues;
 
     using Easy.Logger;
 
@@ -34,12 +26,9 @@
         {
             RegisterFunctions(container);
             RegisterProducers(container);
-            RegisterConsumers(container);
             RegisterProviders(container);
-            RegisterCommands(container);
-            RegisterFactories(container);
-            RegisterAdapters(container);
             RegisterManagers(container);
+
             return container;
         }
         
@@ -51,60 +40,16 @@
 
         private static void RegisterProducers(Container container)
         {
-            container.Register<IEventProducer, EventProducer>();
+            container.Register<IEventConsumer, EventConsumer>();
         }
         
-        private static void RegisterConsumers(Container container)
-        {
-            RegisterCollectionOfSingletons<IEventConsumer>(container);
-        }
-
-        private static void RegisterAdapters(Container container)
-        {
-            container.RegisterSingleton<IContainerAdapter, ContainerAdapter>();
-            container.RegisterSingleton<IEventQueue<TraceReceivedEvent>, EventQueue<TraceReceivedEvent>>();
-        }
-
-        private static void RegisterFactories(Container container)
-        {
-            container.RegisterSingleton<IDapperConnectionFactory, DapperConnectionFactory>();
-        }
-
-        private static void RegisterCommands(Container container)
-        {
-            container.Register(
-                typeof (IOneWayCommandHandler<>),
-                new List<Assembly> {typeof (CreateErrorLogCommandHandler).Assembly}, Lifestyle.Scoped);
-
-            container.RegisterDecorator(
-                typeof (IOneWayCommandHandler<>),
-                typeof (OneWayAmbientUnitOfWorkDecorator<>), Lifestyle.Scoped);
-        }
-
         private static void RegisterFunctions(Container container)
         {
             container.RegisterSingleton<ILogService>(() => Log4NetService.Instance);
-            container.RegisterSingleton<ILogInitializer, LogInitializer>();
-
-            container.Register<ICommandExecutor, CommandExecutor>(Lifestyle.Scoped);
-            container.Register<IEventCommandExecutor, EventCommandExecutor>(Lifestyle.Scoped);
+            container.RegisterSingleton<ILoggerBuilder, LoggerBuilder>();
             container.RegisterSingleton<IEventPayloadBuilder, EventPayloadBuilder>();
         }
-
-        private static void RegisterCollectionOfSingletons<TInterface>(Container container) where TInterface : class
-        {
-            // bit of extra code needed here to register a collection as singleton...
-            var eventConsumerTypes = container.GetTypesToRegister(typeof(TInterface),
-                new[] { typeof(TInterface).Assembly });
-
-            var eventConsumerTypeRegistrations = (
-                from eventConsumerType in eventConsumerTypes
-                select Lifestyle.Singleton.CreateRegistration(eventConsumerType, container)
-                ).ToArray();
-
-            container.RegisterCollection<TInterface>(eventConsumerTypeRegistrations);
-        }
-
+        
         private static void RegisterProviders(Container container)
         {
             container.RegisterSingleton<ConfigurationProvider>();

@@ -2,7 +2,7 @@
 {
     using System.Configuration;
 
-    public class EventProducerConfigurationElement : ConfigurationElement
+    public class EventConsumerConfigurationElement : ConfigurationElement
     {
         private const string NameProperty = "name";
         private const string EventSourceProperty = "eventSource";

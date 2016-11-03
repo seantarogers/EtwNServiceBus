@@ -1,10 +1,13 @@
-﻿namespace Consumer.Consumers
+﻿namespace Consumer.Producers
 {
     using System;
 
+    using CustomConfiguration;
+
     public interface IEventConsumer
     {
-        void Start();
+        void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement);
+        void Stop();
         void OnError(Action<Exception> errorAction);
     }
 }

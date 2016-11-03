@@ -1,51 +1,44 @@
-﻿namespace Consumer.Producers
+﻿namespace Consumer.Consumers
 {
     using System;
 
     using Adapters;
-
     using Constants;
-
     using CustomConfiguration;
-
     using Functions;
-
-    using Easy.Logger;
+    using Producers;
 
     using log4net;
 
     using Microsoft.Diagnostics.Tracing;
     using Microsoft.Diagnostics.Tracing.Session;
 
-    public class EventProducer : IEventProducer
+    public class EventConsumer : IEventConsumer
     {
         private readonly IEventPayloadBuilder eventPayloadBuilder;
-        private readonly ILogInitializer logInitializer;
-        private readonly ILogService logService;
+        private readonly ILoggerBuilder loggerBuilder;
         private readonly ITraceSessionManager traceSessionManager;
-        private ILogger producerEasyLogger;
-        private EventProducerConfigurationElement eventProducerConfiguration;
+        private EventConsumerConfigurationElement eventConsumerConfiguration;
         private TraceEventSession traceEventSession;
         private Action<Exception> raiseErrorInParentThread;
+        private ILog eventSinklogger;
 
         private const string Session = "-Session";
 
-        public EventProducer(
-            ILogService logService,
+        public EventConsumer(
             ITraceSessionManager traceSessionManager,
-            ILogInitializer logInitializer, 
+            ILoggerBuilder loggerBuilder, 
             IEventPayloadBuilder eventPayloadBuilder)
         {
-            this.logService = logService;
             this.traceSessionManager = traceSessionManager;
-            this.logInitializer = logInitializer;
+            this.loggerBuilder = loggerBuilder;
             this.eventPayloadBuilder = eventPayloadBuilder;
         }
 
-        public void Start(EventProducerConfigurationElement eventProducerConfigurationElement)
+        public void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement)
         {
-            eventProducerConfiguration = eventProducerConfigurationElement;
-            InitializeLoggers();
+            eventConsumerConfiguration = eventConsumerConfigurationElement;
+            InitializerLoggers();
 
             try
             {
@@ -56,8 +49,8 @@
             }
             catch (Exception exception)
             {
-                producerEasyLogger.Error(
-                    $"An exception has been raised in Start(). For Event Source: {eventProducerConfiguration.EventSource}, Details: {exception}");
+                //producerEasyLogger.Error(
+                //    $"An exception has been raised in Start(). For Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}");
                 raiseErrorInParentThread(exception);
             }
         }
@@ -65,7 +58,7 @@
         public void Stop()
         {
             traceSessionManager.DisposeTraceEventSession(
-                eventProducerConfiguration.EventSource + Session,
+                eventConsumerConfiguration.EventSource + Session,
                 traceEventSession);
         }
 
@@ -82,54 +75,52 @@
         private void CreateTraceEventSession()
         {
             traceEventSession = traceSessionManager.CreateTraceEventSession(
-                eventProducerConfiguration.EventSource + Session,
-                eventProducerConfiguration.EventSource);
+                eventConsumerConfiguration.EventSource + Session,
+                eventConsumerConfiguration.EventSource);
         }
 
         private void SubscribeToDebugTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, ConsumerConstants.DebugLevel);
+            var eventStream = traceEventSession.Source.Dynamic.Observe(eventConsumerConfiguration.EventSource, ConsumerConstants.DebugLevel);
 
             eventStream.Subscribe(
                 traceEvent => SinkDebugEvent(new TraceEventAdapter(traceEvent)),
                 exception => producerEasyLogger.Error(
-                    $"An exception was raised whilst consuming an debug event from the event stream. Event processing will now stop. Event Source: {eventProducerConfiguration.EventSource}, Details: {exception}"),
+                    $"An exception was raised whilst consuming an debug event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
                 () => producerEasyLogger.Debug(
-                    $"The debug event stream has completed for source: {eventProducerConfiguration.EventSource}."));
+                    $"The debug event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
         }
 
         private void SubscribeToErrorTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventProducerConfiguration.EventSource, ConsumerConstants.ErrorLevel);
+            var eventStream = traceEventSession.Source.Dynamic.Observe(eventConsumerConfiguration.EventSource, ConsumerConstants.ErrorLevel);
 
             eventStream.Subscribe(
                 traceEvent => SinkErrorEvent(new TraceEventAdapter(traceEvent)),
                 exception =>
                 producerEasyLogger.Error(
-                    $"An exception was raised whilst consuming an error event from the event stream. Event processing will now stop. Event Source: {eventProducerConfiguration.EventSource}, Details: {exception}"),
+                    $"An exception was raised whilst consuming an error event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
                 () =>
                 producerEasyLogger.Debug(
-                    $"The error event stream has completed for source: {eventProducerConfiguration.EventSource}."));
+                    $"The error event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
         }
 
-        private void InitializeLoggers()
+        private void InitializerLoggers()
         {
-            if (eventProducerConfiguration.LogDebugTracesToDatabase)
+            if (eventConsumerConfiguration.LogDebugTracesToDatabase)
             {
-                logInitializer.InitializeForDebugDatabaseLogging(
-                    eventProducerConfiguration.RollingLogPath,
-                    eventProducerConfiguration.ApplicationName,
-                    eventProducerConfiguration.RollingLogFileName);
+                eventSinklogger = loggerBuilder.BuildForApplicationLogging(
+                    eventConsumerConfiguration.RollingLogPath,
+                    eventConsumerConfiguration.ApplicationName,
+                    eventConsumerConfiguration.RollingLogFileName);
             }
             else
             {
-                logInitializer.InitializeForErrorDatabaseLogging(
-                    eventProducerConfiguration.RollingLogPath,
-                    eventProducerConfiguration.ApplicationName,
-                    eventProducerConfiguration.RollingLogFileName);
+                eventSinklogger = loggerBuilder.BuildForBusLogging(
+                    eventConsumerConfiguration.RollingLogPath,
+                    eventConsumerConfiguration.ApplicationName,
+                    eventConsumerConfiguration.RollingLogFileName);
             }
-
-            //producerEasyLogger = logService.GetLogger(GetType());
         }
 
         private void SinkErrorEvent(ITraceEventAdapter traceEventAdapter)
@@ -140,11 +131,10 @@
                 //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
                 return;
             }
+            
+            SetCustomAdoAppenderProperties(traceEventAdapter);
 
-            var clientApplicationLog = LogManager.GetLogger(eventProducerConfiguration.ApplicationName);
-            SetCustomAdoProperties(traceEventAdapter);
-
-            clientApplicationLog.ErrorFormat(
+            eventSinklogger.ErrorFormat(
                 "{0} {1} {2}",
                 eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
                 eventPayload.TraceSource,
@@ -159,22 +149,21 @@
                 //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
                 return;
             }
+            
+            SetCustomAdoAppenderProperties(traceEventAdapter);
 
-            var clientApplicationLog = LogManager.GetLogger(eventProducerConfiguration.ApplicationName);
-            SetCustomAdoProperties(traceEventAdapter);
-
-            clientApplicationLog.DebugFormat(
+            eventSinklogger.DebugFormat(
                 "{0} {1} {2}",
                 eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
                 eventPayload.TraceSource,
                 eventPayload.Payload);
         }
 
-        private void SetCustomAdoProperties(ITraceEventAdapter traceEventAdapter)
+        private void SetCustomAdoAppenderProperties(ITraceEventAdapter traceEventAdapter)
         {
-            LogicalThreadContext.Properties["Logger"] = eventProducerConfiguration.Name;
+            LogicalThreadContext.Properties["Logger"] = eventConsumerConfiguration.Name;
             LogicalThreadContext.Properties["LogDate"] = traceEventAdapter.TimeStamp;
-            LogicalThreadContext.Properties["ApplicationName"] = eventProducerConfiguration.ApplicationName;
+            LogicalThreadContext.Properties["ApplicationName"] = eventConsumerConfiguration.ApplicationName;
         }
     }
 }

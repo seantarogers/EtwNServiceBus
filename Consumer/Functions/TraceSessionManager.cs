@@ -60,9 +60,6 @@
             existingTraceEventSession.Dispose();
         }
 
-        public bool TraceEventSessionIsActive(string sessionName)
-        {
-            return TraceEventSession.GetActiveSessionNames().Contains(sessionName);
-        }
+        public bool TraceEventSessionIsActive(string sessionName) => TraceEventSession.GetActiveSessionNames().Contains(sessionName);
     }
 }

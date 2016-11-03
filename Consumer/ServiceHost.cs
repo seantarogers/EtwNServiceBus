@@ -5,12 +5,9 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    using Consumer.Extensions;
-
-    using Consumers;
-    using Events;
+    using Extensions;
+    
     using Producers;
-    using Queues;
 
     using CustomConfiguration;
 
@@ -20,9 +17,7 @@
 
     public class ServiceHost : IServiceHost
     {
-        private List<IEventProducer> eventProducers;
-        private IEnumerable<IEventConsumer> eventConsumers;
-        private static IEventQueue<TraceReceivedEvent> traceQueue;
+        private List<IEventConsumer> eventProducers;
         private static HostControl thisHostControl;
 
         //private ILogger easyLogger;
@@ -37,9 +32,7 @@
             try
             {
                 CreateContainer();
-                StartEventConsumers();
                 StartEventProducers();
-                StoreQueuesForlaterDisposal();
             }
             catch (AggregateException aggregateException)
             {
@@ -58,16 +51,11 @@
         public bool Stop()
         {
             //easyLogger.ErrorFormat("Stop was called in the ServiceHost");
-
-            if (!StopConsumersConsumingFromQueues())
-            {
-                return false;
-            }
-
+            
             return StopEventProducers();
         }
 
-        private void LogAggregateException(AggregateException aggregateException)
+        private static void LogAggregateException(AggregateException aggregateException)
         {
             var stringBuilder = new StringBuilder();
             foreach (var innerException in aggregateException.Flatten().InnerExceptions)
@@ -77,22 +65,7 @@
 
             //easyLogger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
         }
-
-        private bool StopConsumersConsumingFromQueues()
-        {
-            try
-            {
-                //easyLogger.DebugFormat("Stopping traceQueue");
-                traceQueue?.CompleteAdding();
-                //easyLogger.DebugFormat("Stopped traceQueue");                
-            }
-            catch (Exception exception)
-            {
-                //easyLogger.ErrorFormat($"An error was raised whilst trying to stop a queue. Details: {exception}");
-                return false;
-            }
-            return true;
-        }
+        
 
         private bool StopEventProducers()
         {
@@ -114,20 +87,15 @@
             return true;
         }
 
-        private static void StoreQueuesForlaterDisposal()
-        {
-            traceQueue = Container.GetInstance<IEventQueue<TraceReceivedEvent>>();
-        }
-
         private void StartEventProducers()
         {
-            eventProducers = new List<IEventProducer>();
-            var eventProducerElements = EventProducersSection.Section.EventProducerElements;
+            eventProducers = new List<IEventConsumer>();
+            var eventProducerElements = EventConsumersSection.Section.EventConsumerElements;
             for (var i = 0; i < eventProducerElements.Count; i++)
             {
                 var eventSubscriberConfiguration = eventProducerElements[i];
 
-                var eventSubscriber = Container.GetInstance<IEventProducer>();
+                var eventSubscriber = Container.GetInstance<IEventConsumer>();
                 eventSubscriber.OnError(SubscriberError);
                 //easyLogger.DebugFormat($"Starting event producer: {eventSubscriber.GetType().FullName}");
 
@@ -137,31 +105,14 @@
                 eventProducers.Add(eventSubscriber);
             }
         }
-
-        private void StartEventConsumers()
-        {
-            eventConsumers = Container.GetAllInstances<IEventConsumer>();
-            foreach (var eventConsumer in eventConsumers)
-            {
-                eventConsumer.OnError(ConsumerError);
-                //easyLogger.DebugFormat($"Starting event consumer: {eventConsumer.GetType().FullName}");
-                Task.Factory.StartNew(() => { eventConsumer.Start(); }, TaskCreationOptions.LongRunning);
-            }
-        }
-
+        
         private void SubscriberError(Exception exception)
         {
             //easyLogger.ErrorFormat("An subscriber error was raised. " +
                                         //$"The windows service will be stopped. Details: {exception}");
             thisHostControl.Stop();
         }
-
-        private void ConsumerError(Exception exception)
-        {
-            //easyLogger.ErrorFormat("A consumer error was raised. " +
-                                        //$"The windows service will be stopped. Details: {exception}");
-            thisHostControl.Stop();
-        }
+        
 
         private static void CreateContainer()
         {
