@@ -45,9 +45,9 @@
             var adoNetAppender = CreateAdoAppender(Level.Error, CreateErrorSprocName);
             logger.AddAppender(adoNetAppender);
 
-            var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
-            logger.AddAppender(eventLogAppender);
-            logger.Repository.Configured = true;
+            //var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
+            //logger.AddAppender(eventLogAppender);
+            //logger.Repository.Configured = true;
 
             return log;
         }
@@ -75,9 +75,9 @@
             var errorAdoAppender = CreateAdoAppender(Level.Error, CreateErrorSprocName);
             logger.AddAppender(errorAdoAppender);
 
-            var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
-            logger.AddAppender(eventLogAppender);
-            logger.Repository.Configured = true;
+            //var eventLogAppender = CreateWindowsEventLogAppender(applicationName);
+            //logger.AddAppender(eventLogAppender);
+            //logger.Repository.Configured = true;
 
             return log;
         }

@@ -1,9 +1,15 @@
 ﻿namespace Consumer.Consumers
 {
     using System;
+    using System.Threading.Tasks;
 
     using Adapters;
     using Constants;
+
+    using Command.Commands;
+
+    using Command.Handlers;
+
     using CustomConfiguration;
     using Functions;
     using Producers;
@@ -15,24 +21,27 @@
 
     public class EventConsumer : IEventConsumer
     {
+        private readonly IContainerAdapter containerAdapter;
         private readonly IEventPayloadBuilder eventPayloadBuilder;
         private readonly ILoggerBuilder loggerBuilder;
         private readonly ITraceSessionManager traceSessionManager;
         private EventConsumerConfigurationElement eventConsumerConfiguration;
         private TraceEventSession traceEventSession;
         private Action<Exception> raiseErrorInParentThread;
-        private ILog eventSinklogger;
+        private ILog fileLogger;
 
         private const string Session = "-Session";
 
         public EventConsumer(
             ITraceSessionManager traceSessionManager,
-            ILoggerBuilder loggerBuilder, 
-            IEventPayloadBuilder eventPayloadBuilder)
+            ILoggerBuilder loggerBuilder,
+            IEventPayloadBuilder eventPayloadBuilder,
+            IContainerAdapter containerAdapter)
         {
             this.traceSessionManager = traceSessionManager;
             this.loggerBuilder = loggerBuilder;
             this.eventPayloadBuilder = eventPayloadBuilder;
+            this.containerAdapter = containerAdapter;
         }
 
         public void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement)
@@ -74,34 +83,41 @@
 
         private void CreateTraceEventSession()
         {
-            traceEventSession = traceSessionManager.CreateTraceEventSession(
-                eventConsumerConfiguration.EventSource + Session,
-                eventConsumerConfiguration.EventSource);
+            traceEventSession =
+                traceSessionManager.CreateTraceEventSession(
+                    eventConsumerConfiguration.EventSource + Session,
+                    eventConsumerConfiguration.EventSource);
         }
 
         private void SubscribeToDebugTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventConsumerConfiguration.EventSource, ConsumerConstants.DebugLevel);
+            var eventStream = traceEventSession.Source.Dynamic.Observe(
+                eventConsumerConfiguration.EventSource,
+                ConsumerConstants.DebugLevel);
 
             eventStream.Subscribe(
                 traceEvent => SinkDebugEvent(new TraceEventAdapter(traceEvent)),
-                exception => producerEasyLogger.Error(
+                exception =>
+                Console.WriteLine(
                     $"An exception was raised whilst consuming an debug event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
-                () => producerEasyLogger.Debug(
+                () =>
+                Console.WriteLine(
                     $"The debug event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
         }
 
         private void SubscribeToErrorTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(eventConsumerConfiguration.EventSource, ConsumerConstants.ErrorLevel);
+            var eventStream = traceEventSession.Source.Dynamic.Observe(
+                eventConsumerConfiguration.EventSource,
+                ConsumerConstants.ErrorLevel);
 
             eventStream.Subscribe(
                 traceEvent => SinkErrorEvent(new TraceEventAdapter(traceEvent)),
                 exception =>
-                producerEasyLogger.Error(
+                Console.WriteLine(
                     $"An exception was raised whilst consuming an error event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
                 () =>
-                producerEasyLogger.Debug(
+                Console.WriteLine(
                     $"The error event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
         }
 
@@ -109,14 +125,14 @@
         {
             if (eventConsumerConfiguration.LogDebugTracesToDatabase)
             {
-                eventSinklogger = loggerBuilder.BuildForApplicationLogging(
+                fileLogger = loggerBuilder.BuildForApplicationLogging(
                     eventConsumerConfiguration.RollingLogPath,
                     eventConsumerConfiguration.ApplicationName,
                     eventConsumerConfiguration.RollingLogFileName);
             }
             else
             {
-                eventSinklogger = loggerBuilder.BuildForBusLogging(
+                fileLogger = loggerBuilder.BuildForBusLogging(
                     eventConsumerConfiguration.RollingLogPath,
                     eventConsumerConfiguration.ApplicationName,
                     eventConsumerConfiguration.RollingLogFileName);
@@ -131,14 +147,45 @@
                 //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
                 return;
             }
-            
-            SetCustomAdoAppenderProperties(traceEventAdapter);
+            using (containerAdapter.BeginExecutionContextScope())
+            {
+                var createErrorLogTask = Task.Run(
+                    () =>
+                        {
+                            var createErrorLogCommandHandler =
+                                containerAdapter.GetInstance<ITransactionalCommandHandler<CreateErrorLogCommand>>();
+                            createErrorLogCommandHandler.Handle(
+                                new CreateErrorLogCommand
+                                    {
+                                        ApplicationName = eventConsumerConfiguration.ApplicationName,
+                                        LogDate = eventPayload.TraceDate,
+                                        Logger = eventConsumerConfiguration.Name,
+                                        LogMessage = eventPayload.Payload
+                                    });
+                        });
 
-            eventSinklogger.ErrorFormat(
-                "{0} {1} {2}",
-                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
-                eventPayload.TraceSource,
-                eventPayload.Payload);
+                var createWindowsEventLogTask = Task.Run(
+                    () =>
+                        {
+                            var createWindowsEventLogCommandHandler =
+                                containerAdapter
+                                    .GetInstance<INonTransactionalCommandHandler<CreateWindowsEventLogCommand>>();
+                            createWindowsEventLogCommandHandler.Handle(
+                                new CreateWindowsEventLogCommand { LogMessage = eventPayload.Payload });
+                        });
+
+                var createFileLogTask = Task.Run(
+                    () =>
+                        {
+                            fileLogger.ErrorFormat(
+                                "{0} {1} {2}",
+                                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                                eventPayload.TraceSource,
+                                eventPayload.Payload);
+                        });
+
+                Task.WaitAll(createErrorLogTask, createWindowsEventLogTask, createFileLogTask);
+            }
         }
 
         private void SinkDebugEvent(ITraceEventAdapter traceEventAdapter)
@@ -149,21 +196,40 @@
                 //easyLogger.Debug($"Event received without a valid payload from clientApplication: {traceReceivedEvent.ClientAplicationName}");
                 return;
             }
-            
-            SetCustomAdoAppenderProperties(traceEventAdapter);
 
-            eventSinklogger.DebugFormat(
-                "{0} {1} {2}",
-                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
-                eventPayload.TraceSource,
-                eventPayload.Payload);
-        }
+            using (containerAdapter.BeginExecutionContextScope())
+            {
+                var createDebugLogTask = Task.Run(
+                    () =>
+                        {
+                            if (eventConsumerConfiguration.LogDebugTracesToDatabase)
+                            {
+                                var createDebugLogCommandHandler =
+                                    containerAdapter.GetInstance<ITransactionalCommandHandler<CreateDebugLogCommand>>();
+                                createDebugLogCommandHandler.Handle(
+                                    new CreateDebugLogCommand
+                                        {
+                                            ApplicationName =
+                                                eventConsumerConfiguration.ApplicationName,
+                                            LogDate = eventPayload.TraceDate,
+                                            Logger = eventConsumerConfiguration.Name,
+                                            LogMessage = eventPayload.Payload
+                                        });
+                            }
+                        });
 
-        private void SetCustomAdoAppenderProperties(ITraceEventAdapter traceEventAdapter)
-        {
-            LogicalThreadContext.Properties["Logger"] = eventConsumerConfiguration.Name;
-            LogicalThreadContext.Properties["LogDate"] = traceEventAdapter.TimeStamp;
-            LogicalThreadContext.Properties["ApplicationName"] = eventConsumerConfiguration.ApplicationName;
+                var createFileLogTask = Task.Run(
+                    () =>
+                        {
+                            fileLogger.DebugFormat(
+                                "{0} {1} {2}",
+                                eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                                eventPayload.TraceSource,
+                                eventPayload.Payload);
+                        });
+
+                Task.WaitAll(createDebugLogTask, createFileLogTask);
+            }
         }
     }
 }

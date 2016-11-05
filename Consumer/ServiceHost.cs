@@ -117,7 +117,7 @@
         private static void CreateContainer()
         {
             Container = new Container();
-            Container.UseLifetimeScopeLifestyle();
+            Container.UseExecutionContextLifestyle();
             Container.RegisterComponents();    
             Container.Verify();        
         }

@@ -1,6 +1,14 @@
 ﻿namespace Consumer.Extensions
 {
+    using System.Collections.Generic;
     using System.Configuration;
+    using System.Reflection;
+
+    using Command.Decorators.Consumer.Commands.Decorators;
+    using Command.Handlers;
+
+    using Adapters;
+    using Command.Dapper;
 
     using Consumers;
 
@@ -12,26 +20,53 @@
     using Easy.Logger;
 
     using SimpleInjector;
-    using SimpleInjector.Extensions.LifetimeScoping;
+    using SimpleInjector.Extensions.ExecutionContextScoping;
 
     public static class ContainerExtensions
     {
-        public static Container UseLifetimeScopeLifestyle(this Container container)
+        public static Container UseExecutionContextLifestyle(this Container container)
         {
-            container.Options.DefaultScopedLifestyle = new LifetimeScopeLifestyle();
+            container.Options.DefaultScopedLifestyle = new ExecutionContextScopeLifestyle();
             return container;
         }
 
         public static Container RegisterComponents(this Container container)
         {
+            RegisterAdapters(container);
             RegisterFunctions(container);
             RegisterProducers(container);
             RegisterProviders(container);
             RegisterManagers(container);
+            RegisterCommands(container);
+            RegisterFactories(container);
 
             return container;
         }
-        
+
+        private static void RegisterFactories(Container container)
+        {
+            container.Register<IDapperConnectionFactory, DapperConnectionFactory>(Lifestyle.Scoped);
+        }
+
+        private static void RegisterAdapters(Container container)
+        {
+            container.RegisterSingleton<IContainerAdapter, ContainerAdapter>();
+        }
+
+        private static void RegisterCommands(Container container)
+        {
+            container.Register(
+                typeof(ITransactionalCommandHandler<>),
+                new List<Assembly> { typeof(CreateErrorLogCommandHandler).Assembly }, Lifestyle.Scoped);
+
+            container.Register(
+                typeof(INonTransactionalCommandHandler<>),
+                new List<Assembly> { typeof(CreateWindowsEventLogCommandHandler).Assembly }, Lifestyle.Scoped);
+
+            container.RegisterDecorator(
+                typeof(ITransactionalCommandHandler<>),
+                typeof(UnitOfWorkDecorator<>), Lifestyle.Scoped);
+        }
 
         private static void RegisterManagers(Container container)
         {
