@@ -18,4 +18,4 @@ The Consumer was written as a simplified alternative to [Semantic Logging Applic
 
 ## Architecture
 
-![Image of Architecture](https://raw.githubusercontent.com/seantarogers/ETWNServiceBus/master/ETWNServiceBus.png)
+![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/EtwNServiceBusOverview.png)
