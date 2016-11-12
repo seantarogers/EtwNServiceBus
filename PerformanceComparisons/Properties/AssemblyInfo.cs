@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TracingBenchmarker")]
+[assembly: AssemblyTitle("PerformanceComparisons")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TracingBenchmarker")]
+[assembly: AssemblyProduct("PerformanceComparisons")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9128527e-6c4e-47ea-a656-04eed053533c")]
+[assembly: Guid("e488e5a9-9b9c-4dad-8480-73f269bf1083")]
 
 // Version information for an assembly consists of the following four values:
 //

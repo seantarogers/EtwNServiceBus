@@ -1,3 +1,0 @@
-1. using a producer consumer to avoid multiple threads writing to the same table at the same time.
-and to provide a bit more capacity
-

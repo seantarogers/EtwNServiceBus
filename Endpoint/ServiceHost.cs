@@ -22,6 +22,7 @@ namespace Endpoint
             }
             catch (Exception exception)
             {
+                Console.WriteLine($"Exception raised during start. Details: {exception}");
                 return false;
             }
 
@@ -36,9 +37,9 @@ namespace Endpoint
                     .GetAwaiter()
                     .GetResult();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // ignored
+                Console.WriteLine($"Exception raised during stop. Details: {exception}");
             }
 
             return true;
