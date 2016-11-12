@@ -1,11 +1,9 @@
-﻿namespace Provider.EtwLoggers
+﻿using System;
+using NServiceBus.Logging;
+using Provider.EventSources;
+
+namespace Provider.EtwLoggers
 {
-    using System;
-
-    using NServiceBus.Logging;
-
-    using Provider.EventSources;
-
     public class EtwLoggerDefinition : LoggingFactoryDefinition
     {
         private LogLevel thisLevel;

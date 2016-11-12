@@ -1,13 +1,11 @@
-﻿namespace Consumer.Functions
+﻿using System;
+using System.Linq;
+using System.Text;
+using Consumer.Adapters;
+using Consumer.Extensions;
+
+namespace Consumer.Functions
 {
-    using System;
-    using System.Linq;
-    using System.Text;
-
-    using Adapters;
-
-    using Extensions;
-
     public class EventPayloadBuilder : IEventPayloadBuilder
     {
         private const string TraceSourceItemName = "source";

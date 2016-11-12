@@ -1,8 +1,8 @@
-﻿namespace Consumer.CustomConfiguration
-{
-    using System;
-    using System.Configuration;
+﻿using System;
+using System.Configuration;
 
+namespace Consumer.CustomConfiguration
+{
     [ConfigurationCollection(typeof(EventConsumerConfigurationElement))]
     public class EventConsumerElementCollection : ConfigurationElementCollection
     {

@@ -1,38 +1,30 @@
-﻿namespace Consumer
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Consumer.Consumers;
+using Consumer.CustomConfiguration;
+using Consumer.Extensions;
+using SimpleInjector;
+using Topshelf;
+
+namespace Consumer
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
-
-    using Extensions;
-    
-    using Producers;
-
-    using CustomConfiguration;
-
-    using SimpleInjector;
-
-    using Topshelf;
-
     public class ServiceHost : IServiceHost
     {
         private List<IEventConsumer> eventProducers;
-        private static HostControl thisHostControl;
-
-        //private ILogger easyLogger;
-
+        private static HostControl serviceHostControl;
+        
         public static Container Container { get; private set; }
 
         public bool Start(HostControl hostControl)
         {
-            thisHostControl = hostControl;
-            SetUpLog4Net();
+            serviceHostControl = hostControl;
             
             try
             {
                 CreateContainer();
-                StartEventProducers();
+                StartEventConsumers();
             }
             catch (AggregateException aggregateException)
             {
@@ -41,7 +33,7 @@
             }
             catch (Exception exception)
             {
-                //easyLogger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {exception}");
+                Console.WriteLine($"An exception was raised in the ServiceHost. Details: {exception}");
                 return false;
             }
 
@@ -50,11 +42,10 @@
 
         public bool Stop()
         {
-            //easyLogger.ErrorFormat("Stop was called in the ServiceHost");
-            
-            return StopEventProducers();
+            Console.WriteLine("Stop was called in the ServiceHost");
+            return StopEventConsumers();
         }
-
+        
         private static void LogAggregateException(AggregateException aggregateException)
         {
             var stringBuilder = new StringBuilder();
@@ -63,31 +54,36 @@
                 stringBuilder.Append(innerException);
             }
 
-            //easyLogger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
+            Console.WriteLine($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
         }
-        
 
-        private bool StopEventProducers()
+        private static void ConsumerError(Exception exception)
+        {
+            Console.WriteLine($"An consumer error was raised. The windows service will be stopped. Details: {exception}");
+            serviceHostControl.Stop();
+        }
+
+        private bool StopEventConsumers()
         {
             try
             {
                 foreach (var eventProducer in eventProducers)
                 {
                     var producerName = eventProducer.GetType().FullName;
-                    //easyLogger.DebugFormat($"Stopping event producer : {producerName}");
+                    Console.WriteLine($"Stopping event consumer : { producerName}");
                     eventProducer.Stop();
-                    //easyLogger.DebugFormat($"Stopped event producer: {producerName}");
+                    Console.WriteLine($"Stopped event consumer : { producerName}");
                 }
             }
             catch (Exception exception)
             {
-                //easyLogger.ErrorFormat($"An error was raised whilst trying to stop an eventProducer. Details: {exception}");
+                Console.WriteLine($"An error was raised whilst trying to stop an eventConsumer.Details: { exception}");
                 return false;
             }
             return true;
         }
 
-        private void StartEventProducers()
+        private void StartEventConsumers()
         {
             eventProducers = new List<IEventConsumer>();
             var eventProducerElements = EventConsumersSection.Section.EventConsumerElements;
@@ -96,23 +92,14 @@
                 var eventSubscriberConfiguration = eventProducerElements[i];
 
                 var eventSubscriber = Container.GetInstance<IEventConsumer>();
-                eventSubscriber.OnError(SubscriberError);
-                //easyLogger.DebugFormat($"Starting event producer: {eventSubscriber.GetType().FullName}");
+                Console.WriteLine($"Starting event Consumer: {eventSubscriber.GetType().FullName}");
 
-                Task.Factory.StartNew(() => { eventSubscriber.Start(eventSubscriberConfiguration); },
+                Task.Factory.StartNew(() => { eventSubscriber.Start(eventSubscriberConfiguration, ConsumerError); },
                     TaskCreationOptions.LongRunning);
 
                 eventProducers.Add(eventSubscriber);
             }
         }
-        
-        private void SubscriberError(Exception exception)
-        {
-            //easyLogger.ErrorFormat("An subscriber error was raised. " +
-                                        //$"The windows service will be stopped. Details: {exception}");
-            thisHostControl.Stop();
-        }
-        
 
         private static void CreateContainer()
         {
@@ -120,13 +107,6 @@
             Container.UseExecutionContextLifestyle();
             Container.RegisterComponents();    
             Container.Verify();        
-        }
-
-        private void SetUpLog4Net()
-        {
-            //EasyLogger.InitializeTypeReference();
-            //XmlConfigurator.ConfigureAndWatch(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
-            //easyLogger = Log4NetService.Instance.GetLogger(GetType());
         }
     }
 }

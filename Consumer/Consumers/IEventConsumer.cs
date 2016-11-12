@@ -1,4 +1,4 @@
-﻿namespace Consumer.Producers
+﻿namespace Consumer.Consumers
 {
     using System;
 
@@ -6,8 +6,7 @@
 
     public interface IEventConsumer
     {
-        void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement);
+        void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement, Action<Exception> raiseException);
         void Stop();
-        void OnError(Action<Exception> errorAction);
     }
 }

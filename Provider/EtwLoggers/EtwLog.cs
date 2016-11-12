@@ -1,11 +1,9 @@
-﻿namespace Provider.EtwLoggers
+﻿using System;
+using NServiceBus.Logging;
+using Provider.EventSources;
+
+namespace Provider.EtwLoggers
 {
-    using System;
-
-    using NServiceBus.Logging;
-
-    using EventSources;
-
     public class EtwLog : ILog
     {
         private readonly string name;

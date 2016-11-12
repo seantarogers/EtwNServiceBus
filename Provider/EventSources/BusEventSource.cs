@@ -1,8 +1,9 @@
-﻿namespace Provider.EventSources
-{
-    using System.Diagnostics.Tracing;
+﻿using System.Diagnostics.Tracing;
 
-    using Infrastructure;
+using Infrastructure;
+
+namespace Provider.EventSources
+{
 
     [EventSource(Name = EventSourceConstants.BusEventSource)]
     public sealed class BusEventSource : EventSource, IBusEventSource

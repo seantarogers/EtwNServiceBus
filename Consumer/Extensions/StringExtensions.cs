@@ -1,13 +1,10 @@
-﻿namespace Consumer.Extensions
+﻿using System;
+using Consumer.Functions;
+using static Consumer.Constants.ConsumerConstants;
+using static Consumer.Functions.EventLevelType;
+
+namespace Consumer.Extensions
 {
-    using System;
-
-    using Functions;
-
-    using static Consumer.Constants.ConsumerConstants;
-
-    using static Functions.EventLevelType;
-
     public static class StringExtensions
     {
         public static EventLevelType ToEventLevel(this string eventName)

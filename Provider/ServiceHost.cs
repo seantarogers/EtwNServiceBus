@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Reflection;
-
 using Autofac;
 using Autofac.Integration.WebApi;
-
 using Microsoft.Owin.Hosting;
-
 using NServiceBus;
 using NServiceBus.Features;
-
 using Topshelf;
+using NServiceBus.Logging;
+using Provider.EtwLoggers;
+using Provider.EventSources;
+using Owin;
 
 namespace Provider
 {
-    using NServiceBus.Logging;
-
-    using EtwLoggers;
-    using EventSources;
-
     public class ServiceHost : IServiceHost
     {
         private static IEndpointInstance EndpointInstance { get; set; }
@@ -54,7 +49,16 @@ namespace Provider
         private static void StartOwinWebHost()
         {
             const string httpLocalhost = "http://localhost:8089";
-            owinHost = WebApp.Start(httpLocalhost);
+            owinHost = WebApp.Start(httpLocalhost,
+                app =>
+                    {
+
+                        var httpConfiguration = new ApiHttpConfiguration();
+                        app.UseAutofacWebApi(httpConfiguration);
+                        app.UseWebApi(httpConfiguration);
+                        httpConfiguration.DependencyResolver = new AutofacWebApiDependencyResolver(Container);
+                    });
+
             Console.WriteLine("Successfully started the SignalR publisher on: {0}", httpLocalhost);
         }
 
@@ -85,7 +89,6 @@ namespace Provider
             endpointConfiguration.DisableFeature<MessageDrivenSubscriptions>();
 
             var conventions = endpointConfiguration.Conventions();
-            conventions.DefiningEventsAs(t => t.Namespace != null && t.Namespace.Contains("Events"));
             conventions.DefiningCommandsAs(t => t.Namespace != null && t.Namespace.Contains("Commands"));
 
             endpointConfiguration.SendOnly();

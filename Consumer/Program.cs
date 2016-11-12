@@ -1,7 +1,7 @@
-﻿namespace Consumer
-{
-    using Topshelf;
+﻿using Topshelf;
 
+namespace Consumer
+{
     public class Program
     {
         public static void Main(string[] args)

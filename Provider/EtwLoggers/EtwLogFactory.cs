@@ -1,11 +1,9 @@
-﻿namespace Provider.EtwLoggers
+﻿using System;
+using NServiceBus.Logging;
+using Provider.EventSources;
+
+namespace Provider.EtwLoggers
 {
-    using System;
-
-    using global::NServiceBus.Logging;
-
-    using Provider.EventSources;
-
     public class EtwLogFactory : IEtwLogFactory
     {
         private readonly LogLevel level;

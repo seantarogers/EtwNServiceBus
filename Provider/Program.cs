@@ -1,12 +1,12 @@
-﻿namespace Provider
-{
-    using Topshelf;
+﻿using Topshelf;
 
+namespace Provider
+{
     internal static class Program
     {
         private static void Main(string[] args)
         {
-            const string serviceName = "NServiceBusETWEventProvider";
+            const string serviceName = "NsbEtwProvider";
 
             HostFactory.Run(
                 x =>

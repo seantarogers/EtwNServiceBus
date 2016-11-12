@@ -1,9 +1,8 @@
-﻿namespace Consumer.Adapters
+﻿using System;
+using Microsoft.Diagnostics.Tracing;
+
+namespace Consumer.Adapters
 {
-    using System;
-
-    using Microsoft.Diagnostics.Tracing;
-
     public class TraceEventAdapter : ITraceEventAdapter
     {
         private readonly TraceEvent traceEvent;

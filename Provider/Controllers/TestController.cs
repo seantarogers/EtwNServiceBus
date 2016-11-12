@@ -17,8 +17,8 @@
         [Route("api/test")]
         public IHttpActionResult Get()
         {
-            applicationEventSource.DebugFormat(this, "Debug statement from the Match controller on {0}", DateTime.Now.ToShortDateString());
-            applicationEventSource.ErrorFormat(this, "Error statement from the Match controller on {0}", DateTime.Now.ToShortDateString());
+            applicationEventSource.DebugFormat(this, "Debug statement from the Test controller on {0}", DateTime.Now.ToShortDateString());
+            applicationEventSource.ErrorFormat(this, "Error statement from the Test controller on {0}", DateTime.Now.ToShortDateString());
             
             return Ok();
         }

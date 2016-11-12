@@ -1,19 +1,13 @@
-﻿namespace Consumer.Functions
+﻿using System;
+
+using Microsoft.Diagnostics.Tracing.Session;
+
+namespace Consumer.Functions
 {
-    using Easy.Logger;
-
-    using Microsoft.Diagnostics.Tracing.Session;
-
     public class TraceSessionManager : ITraceSessionManager
     {
-        private readonly ILogger easyLogger;
         private static readonly object thisLock = new object();
-
-        public TraceSessionManager(ILogService logService)
-        {
-            easyLogger = logService.GetLogger(GetType());
-        }
-
+        
         public TraceEventSession CreateTraceEventSession(string sessionName, string eventSourceName)
         {
             lock (thisLock)
@@ -45,21 +39,21 @@
 
                 if (traceEventSession.EventsLost > 0)
                 {
-                    easyLogger.Error($"Session {sessionName} is closing down. This session lost {traceEventSession.EventsLost} events.");
+                    Console.WriteLine($"Session {sessionName} is closing down. This session lost {traceEventSession.EventsLost} events.");
                 }
 
                 traceEventSession.Dispose();
             }
         }
 
-        private void DisposeExistingSession(string sessionName)
+        private static void DisposeExistingSession(string sessionName)
         {
-            easyLogger.Debug($"Tracing session {sessionName} already exists, will remove and create a new one.");
+            Console.WriteLine($"Tracing session {sessionName} already exists, will remove and create a new one.");
 
             var existingTraceEventSession = new TraceEventSession(sessionName);
             existingTraceEventSession.Dispose();
         }
 
-        public bool TraceEventSessionIsActive(string sessionName) => TraceEventSession.GetActiveSessionNames().Contains(sessionName);
+        private static bool TraceEventSessionIsActive(string sessionName) => TraceEventSession.GetActiveSessionNames().Contains(sessionName);
     }
 }

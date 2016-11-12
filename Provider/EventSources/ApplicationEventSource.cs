@@ -1,9 +1,9 @@
-﻿namespace Provider.EventSources
+﻿using System.Diagnostics.Tracing;
+
+using Infrastructure;
+
+namespace Provider.EventSources
 {
-    using System.Diagnostics.Tracing;
-
-    using Infrastructure;
-
     [EventSource(Name = EventSourceConstants.ApplicationEventSource)]
     public sealed class ApplicationEventSource : EventSource, IApplicationEventSource
     {
