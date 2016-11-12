@@ -20,13 +20,13 @@ The Consumer was written as a simplified alternative to [Semantic Logging Applic
 
 The PerformanceComparisons console project contains 3 tests which compare Log4Net, EasyLogger and ETW over a 10 second period.  It measures how many traces they can each emit.
 
-TL;DR
+**TL;DR**
 
-| Tracer            | Sync           | Number of traces in 10 seconds  |
-| ----------------- |:-------------: | --------------------------------|
-| ETW               | to the O/S     | 8,495,000                       |
-| EasyLogger        | rolling file   | 3,484,000                       |
-| Standard Log4Net  | rolling file   |    68,900                       |                                  |
+| Tracer            | Sync             | Number of traces in 10 seconds  |
+| ----------------- | ---------------- | ------------------------------- |
+| ETW               | to the O/S       | 8,495,000                       |
+| EasyLogger        | to rolling file  | 3,484,000                       |
+| Standard Log4Net  | to rolling file  |    68,900                       |                                  |
 
 Clearly when there are more appenders used in Log4Net the performance degrades significantly. We are only using one appender here.
 The benefit of running this out of process is that the number of event syncs has zero impact on the Provider performance.
