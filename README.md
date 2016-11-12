@@ -2,8 +2,6 @@
 
 Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configured to be the default logger for NServiceBus
 
-# EtwNServiceBus
-
 ## Overview
 
 This is a lightweight, generic ETW Consumer. It consumes trace events from app.config defined Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit Debug and Error events to ETW.
