@@ -5,7 +5,7 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 ## Overview
 
 This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit Debug and Error events to ETW.
-The Consumer was written as a simplified alternative to [Semantic Logging Application Block](https://msdn.microsoft.com/en-us/library/dn440729(v=pandp.60).aspx).
+The Consumer was written as a simplified alternative to [Semantic Logging Application Block](https://msdn.microsoft.com/en-us/library/dn440729(v=pandp.60).aspx). The Provider was written as a high performance logger for NServiceBus.
 
 ## Performance Comparisons
 
