@@ -59,7 +59,7 @@ namespace Provider
                         httpConfiguration.DependencyResolver = new AutofacWebApiDependencyResolver(Container);
                     });
 
-            Console.WriteLine("Successfully started the SignalR publisher on: {0}", httpLocalhost);
+            Console.WriteLine("Successfully started the web host on: {0}", httpLocalhost);
         }
 
         private static void StartNServiceBusEndpoint()
