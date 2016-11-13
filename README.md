@@ -26,7 +26,7 @@ The PerformanceComparisons console project contains 3 tests which compare Log4Ne
 | EasyLogger        | to rolling file  | 3,484,000                       |
 | Standard Log4Net  | to rolling file  |    68,900                       |                                  |
 
-When more Log4Net appenders are used the performance degrades significantly. We are only using one appender in this test. However, when using ETW to write your traces to an out of process consumer there is negligible impact on the Provider performance, so you can trace frequently and to as many syncs as required.
+When more Log4Net appenders are used the performance degrades significantly. We are only using one appender in this test. However, when using ETW to write traces to an out of process ETW Consumer there is negligible impact on the Provider performance. Consequently, the Provider can trace as frequently and to as many syncs as required.
 
 ## Architecture
 
