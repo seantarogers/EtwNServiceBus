@@ -16,9 +16,7 @@ The Consumer was written as a simplified alternative to [Semantic Logging Applic
 
 ## Performance Comparisons
 
-The PerformanceComparisons console project contains 3 tests which compare Log4Net, EasyLogger and ETW over a 10 second period.  It measures how many traces they can each emit.
-
-**TL;DR**
+The PerformanceComparisons console project contains 3 tests which compare Log4Net, EasyLogger and ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
 
 | Tracer            | Sync             | Number of traces in 10 seconds  |
 | ----------------- | ---------------- | ------------------------------- |
