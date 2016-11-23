@@ -2,7 +2,7 @@
 using NServiceBus.Logging;
 using Provider.EventSources;
 
-namespace Provider.EtwLoggers
+namespace Provider.EtwLogger
 {
     public class EtwLog : ILog
     {

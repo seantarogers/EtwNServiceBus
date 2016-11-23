@@ -1,4 +1,4 @@
-﻿namespace Provider.EtwLoggers
+﻿namespace Provider.EtwLogger
 {
     public interface IEtwLogger
     {

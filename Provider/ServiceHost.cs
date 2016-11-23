@@ -7,7 +7,7 @@ using NServiceBus;
 using NServiceBus.Features;
 using Topshelf;
 using NServiceBus.Logging;
-using Provider.EtwLoggers;
+using Provider.EtwLogger;
 using Provider.EventSources;
 using Owin;
 
@@ -16,7 +16,7 @@ namespace Provider
     public class ServiceHost : IServiceHost
     {
         private static IEndpointInstance EndpointInstance { get; set; }
-        public static IContainer Container { get; private set; }
+        private static IContainer Container { get; set; }
 
         private static IDisposable owinHost;
 

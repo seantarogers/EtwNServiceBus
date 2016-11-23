@@ -105,11 +105,11 @@
   <ItemGroup>
     <Compile Include="ApiHttpConfiguration.cs" />
     <Compile Include="Controllers\TestController.cs" />
-    <Compile Include="EtwLoggers\EtwLoggerDefinition.cs" />
-    <Compile Include="EtwLoggers\EtwLogFactory.cs" />
-    <Compile Include="EtwLoggers\EtwLog.cs" />
-    <Compile Include="EtwLoggers\IEtwLogFactory.cs" />
-    <Compile Include="EtwLoggers\IEtwLogger.cs" />
+    <Compile Include="EtwLogger\EtwLoggerDefinition.cs" />
+    <Compile Include="EtwLogger\EtwLogFactory.cs" />
+    <Compile Include="EtwLogger\EtwLog.cs" />
+    <Compile Include="EtwLogger\IEtwLogFactory.cs" />
+    <Compile Include="EtwLogger\IEtwLogger.cs" />
     <Compile Include="EventSources\ApplicationEventSource.cs" />
     <Compile Include="EventSources\BusEventSource.cs" />
     <Compile Include="EventSources\IApplicationEventSource.cs" />
