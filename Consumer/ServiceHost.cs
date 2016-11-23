@@ -12,10 +12,10 @@ namespace Consumer
 {
     public class ServiceHost : IServiceHost
     {
-        private List<IEventConsumer> eventProducers;
+        private List<IEventConsumer> eventConsumers;
         private static HostControl serviceHostControl;
-        
-        public static Container Container { get; private set; }
+
+        private static Container Container { get; set; }
 
         public bool Start(HostControl hostControl)
         {
@@ -67,11 +67,11 @@ namespace Consumer
         {
             try
             {
-                foreach (var eventProducer in eventProducers)
+                foreach (var eventConsumer in eventConsumers)
                 {
-                    var producerName = eventProducer.GetType().FullName;
+                    var producerName = eventConsumer.GetType().FullName;
                     Console.WriteLine($"Stopping event consumer : { producerName}");
-                    eventProducer.Stop();
+                    eventConsumer.Stop();
                     Console.WriteLine($"Stopped event consumer : { producerName}");
                 }
             }
@@ -85,19 +85,19 @@ namespace Consumer
 
         private void StartEventConsumers()
         {
-            eventProducers = new List<IEventConsumer>();
-            var eventProducerElements = EventConsumersSection.Section.EventConsumerElements;
-            for (var i = 0; i < eventProducerElements.Count; i++)
+            eventConsumers = new List<IEventConsumer>();
+            var eventConsumerElements = EventConsumersSection.Section.EventConsumerElements;
+            for (var i = 0; i < eventConsumerElements.Count; i++)
             {
-                var eventSubscriberConfiguration = eventProducerElements[i];
+                var eventConsumerConfigurationElement = eventConsumerElements[i];
 
-                var eventSubscriber = Container.GetInstance<IEventConsumer>();
-                Console.WriteLine($"Starting event Consumer: {eventSubscriber.GetType().FullName}");
+                var eventConsumer = Container.GetInstance<IEventConsumer>();
+                Console.WriteLine($"Starting event Consumer: {eventConsumer.GetType().FullName}");
 
-                Task.Factory.StartNew(() => { eventSubscriber.Start(eventSubscriberConfiguration, ConsumerError); },
+                Task.Factory.StartNew(() => { eventConsumer.Start(eventConsumerConfigurationElement, ConsumerError); },
                     TaskCreationOptions.LongRunning);
 
-                eventProducers.Add(eventSubscriber);
+                eventConsumers.Add(eventConsumer);
             }
         }
 

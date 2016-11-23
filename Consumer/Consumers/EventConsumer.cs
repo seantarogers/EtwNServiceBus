@@ -70,7 +70,7 @@ namespace Consumer.Consumers
                 ConsumerConstants.DebugLevel);
 
             eventStream.Subscribe(
-                traceEvent => SinkDebugEvent(new TraceEventAdapter(traceEvent)),
+                traceEvent => DebugEventSink(new TraceEventAdapter(traceEvent)),
                 exception =>
                 Console.WriteLine(
                     $"An exception was raised whilst consuming an debug event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
@@ -86,7 +86,7 @@ namespace Consumer.Consumers
                 ConsumerConstants.ErrorLevel);
 
             eventStream.Subscribe(
-                traceEvent => SinkErrorEvent(new TraceEventAdapter(traceEvent)),
+                traceEvent => ErrorEventSink(new TraceEventAdapter(traceEvent)),
                 exception =>
                 Console.WriteLine(
                     $"An exception was raised whilst consuming an error event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
@@ -95,7 +95,7 @@ namespace Consumer.Consumers
                     $"The error event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
         }
         
-        private void SinkErrorEvent(ITraceEventAdapter traceEventAdapter)
+        private void ErrorEventSink(ITraceEventAdapter traceEventAdapter)
         {
             var eventPayload = eventPayloadBuilder.Build(traceEventAdapter);
             if (!eventPayload.IsValid)
@@ -105,12 +105,12 @@ namespace Consumer.Consumers
             }
 
             Console.WriteLine("==========================================");
-            Console.WriteLine($"Sinking ERROR {eventConsumerConfiguration.EventSource} trace event from application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
+            Console.WriteLine($"ERROR event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
             Console.WriteLine("==========================================");
             Console.WriteLine("");
         }
         
-        private void SinkDebugEvent(ITraceEventAdapter traceEventAdapter)
+        private void DebugEventSink(ITraceEventAdapter traceEventAdapter)
         {
             var eventPayload = eventPayloadBuilder.Build(traceEventAdapter);
             if (!eventPayload.IsValid)
@@ -120,7 +120,7 @@ namespace Consumer.Consumers
             }
 
             Console.WriteLine("==========================================");
-            Console.WriteLine($"Sinking DEBUG {eventConsumerConfiguration.EventSource} trace event from application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
+            Console.WriteLine($"DEBUG event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
             Console.WriteLine("==========================================");
             Console.WriteLine("");
         }
