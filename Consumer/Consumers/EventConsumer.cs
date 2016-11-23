@@ -104,6 +104,8 @@ namespace Consumer.Consumers
                 return;
             }
 
+            //in our prod version we use easylogger here to write data to a db table, file and windows event log
+            
             Console.WriteLine("==========================================");
             Console.WriteLine($"ERROR event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
             Console.WriteLine("==========================================");
@@ -118,6 +120,8 @@ namespace Consumer.Consumers
                 Console.WriteLine("event payload is not valid");
                 return;
             }
+
+            //in our prod version we use easylogger here to write data to a db table, file and windows event log
 
             Console.WriteLine("==========================================");
             Console.WriteLine($"DEBUG event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
