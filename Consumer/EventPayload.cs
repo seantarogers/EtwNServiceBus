@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace Consumer.Functions
+﻿namespace Consumer
 {
+    using System;
+
     public class EventPayload
     {
         public EventLevelType EventLevel { get; set; }

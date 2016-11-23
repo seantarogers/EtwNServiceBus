@@ -97,13 +97,13 @@
     <Compile Include="CustomConfiguration\EventConsumersSection.cs" />
     <Compile Include="Extensions\ContainerExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Functions\EventLevelType.cs" />
+    <Compile Include="EventLevelType.cs" />
     <Compile Include="Functions\EventPayloadBuilder.cs" />
     <Compile Include="Functions\IEventPayloadBuilder.cs" />
     <Compile Include="Functions\ITraceSessionManager.cs" />
     <Compile Include="Functions\TraceSessionManager.cs" />
     <Compile Include="IServiceHost.cs" />
-    <Compile Include="Functions\EventPayload.cs" />
+    <Compile Include="EventPayload.cs" />
     <Compile Include="Consumers\IEventConsumer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,4 @@
-﻿namespace Consumer.Functions
+﻿namespace Consumer
 {
     public enum EventLevelType 
     {

@@ -1,7 +1,7 @@
 ﻿using System;
-using Consumer.Functions;
+
 using static Consumer.Constants.ConsumerConstants;
-using static Consumer.Functions.EventLevelType;
+using static Consumer.EventLevelType;
 
 namespace Consumer.Extensions
 {
