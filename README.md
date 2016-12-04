@@ -17,7 +17,7 @@ The PerformanceComparisons console project contains 3 tests which compare Log4Ne
 | EasyLogger        | to rolling file  | 3,484,000                       |
 | Standard Log4Net  | to rolling file  |    68,900                       |                                  |
 
-When more Log4Net appenders are used the performance degrades significantly. We are only using one appender in this test. However, when using ETW to write traces to an out of process ETW Consumer there is negligible impact on the Provider performance. Consequently, the Provider can trace as frequently and to as many syncs as required.
+When more Log4Net appenders are used the overall performance degrades significantly. We are only using one appender in this test. However when you add in an ADO appender and a Windows EventLog Appender the number of traces per 10 seconds heads down towards 1000. Fortunately, when writing to an out of process ETW Consumer there is a negligible overhead on the Provider performance. As a result, the Provider can trace as frequently as required and distribute these traces to as many sources as required.
 
 ## To Run Solution
 
