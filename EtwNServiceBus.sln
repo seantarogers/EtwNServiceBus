@@ -17,6 +17,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HighLoadTracer", "HighLoadT
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PerformanceAndLoadTests", "PerformanceAndLoadTests", "{2F885A1E-38EA-42A3-A969-B00B07C8D210}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DatabaseScripts", "DatabaseScripts", "{EFF97183-9B98-404B-940A-4376FDA2F27B}"
+	ProjectSection(SolutionItems) = preProject
+		CreateTraceTablesAndSprocs.sql = CreateTraceTablesAndSprocs.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
