@@ -4,7 +4,7 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 
 ## Overview
 
-This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit Debug and Error events to ETW.
+This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit Debug and Error trace events to ETW.
 The Consumer was written as a simplified and easily deployable alternative to [the Semantic Logging Application Block (SLAB)](https://msdn.microsoft.com/en-us/library/dn440729(v=pandp.60).aspx). The Provider was written as a high performance logger for NServiceBus.
 
 ## Performance Comparisons
@@ -14,10 +14,9 @@ The PerformanceComparisons console project contains 3 tests which compare Log4Ne
 | Tracer            | Sync             | Number of traces in 10 seconds  |
 | ----------------- | ---------------- | ------------------------------- |
 | ETW               | to the O/S       | 8,495,000                       |
-| EasyLogger        | to rolling file  | 3,484,000                       |
-| Standard Log4Net  | to rolling file  |    68,900                       |                                  |
+| In proc Log4Net   | to rolling file  |       903                       |                                  |
 
-When more Log4Net appenders are used the overall performance degrades significantly. We are only using one appender in this test. However when you add in an ADO appender and a Windows EventLog Appender the number of traces per 10 seconds heads down towards 1000. Fortunately, when writing to an out of process ETW Consumer there is a negligible overhead on the Provider performance. As a result, the Provider can trace as frequently as required and distribute these traces to as many sources as required.
+Log4Net had 3 appenders configured: RollingLogFile, ADO and Windows Event log. 
 
 ## To Run Solution
 
