@@ -100,17 +100,5 @@ namespace Provider
             endpointConfiguration.SendOnly();
             return endpointConfiguration;
         }
-
-        private static IContainer CreateContainer()
-        {
-            var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
-
-            //generic singleton so each generic source can be quickly resolved after first use
-            containerBuilder.RegisterGeneric(typeof(ApplicationEventSource<>))
-                .As(typeof(IApplicationEventSource<>))
-                .SingleInstance();
-            return containerBuilder.Build();
-        }
     }
 }
