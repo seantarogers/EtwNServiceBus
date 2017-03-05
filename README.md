@@ -9,14 +9,12 @@ The Consumer was written as a simplified and easily deployable alternative to [t
 
 ## Performance Comparisons
 
-The PerformanceComparisons console project contains 3 tests which compare Log4Net, EasyLogger and ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
+The PerformanceComparisons project compares the tracing performance of in process log4net (3 appenders configured: RollingLogFile, ADO and Windows Event log) against out of process ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
 
 | Tracer            | Sync                                        | Number of traces in 10 seconds |
 | ----------------- | --------------------------------------------|--------------------------------|
 | ETW               | to the O/S                                  |8,495,000                       |
 | In proc Log4Net   | rolling file, Sql Db and Windows Event log  |      903                       |                                  |
-
-Log4Net had 3 appenders configured: RollingLogFile, ADO and Windows Event log. 
 
 ## Consumer Performance and Capacity
 
