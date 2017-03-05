@@ -18,6 +18,10 @@ The PerformanceComparisons console project contains 3 tests which compare Log4Ne
 
 Log4Net had 3 appenders configured: RollingLogFile, ADO and Windows Event log. 
 
+## Consumer Performance and Capacity
+
+Coming soon...
+
 ## To Run Solution
 
 1. Add an NserviceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
