@@ -20,6 +20,10 @@ The PerformanceComparisons project compares the tracing performance of in proces
 
 Coming soon...
 
+## Buffer Flusher
+
+Coming soon...
+
 ## To Run Solution
 
 1. Add an NserviceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
