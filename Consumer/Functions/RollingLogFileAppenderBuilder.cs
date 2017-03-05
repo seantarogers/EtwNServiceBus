@@ -20,7 +20,6 @@ namespace Consumer.Functions
                 MaxSizeRollBackups = 10,
                 MaxFileSize = thirtyMb,
                 AppendToFile = true,
-                ImmediateFlush = true,
                 PreserveLogFileNameExtension = true,
                 DatePattern = $"yyyy-MM-dd'-{rollingLogFileName}-all.log'",
             };
