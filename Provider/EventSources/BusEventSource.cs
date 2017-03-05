@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics.Tracing;
-
 using Infrastructure;
 
 namespace Provider.EventSources
 {
-
     [EventSource(Name = EventSourceConstants.BusEventSource)]
     public sealed class BusEventSource : EventSource, IBusEventSource
     {
+        private const string BusSource = "BusSource";
+
         public class Keywords
         {
             public const EventKeywords DebugTracing = (EventKeywords)1;
@@ -15,17 +15,15 @@ namespace Provider.EventSources
         }
 
         [NonEvent]
-        public void DebugFormat(object source, string debugMessage, params object[] parameters)
+        public void DebugFormat(string debugMessage, params object[] parameters)
         {
-            var debug = string.Format(debugMessage, parameters);
-            Debug(source.ToString(), debug);
+            Debug(BusSource, string.Format(debugMessage, parameters));
         }
 
         [NonEvent]
-        public void ErrorFormat(object source, string errorMessage, params object[] parameters)
+        public void ErrorFormat(string errorMessage, params object[] parameters)
         {
-            var error = string.Format(errorMessage, parameters);
-            Error(source.ToString(), error);
+            Error(BusSource, string.Format(errorMessage, parameters));
         }
 
         [Event(EventSourceConstants.EventSourceDebug, 

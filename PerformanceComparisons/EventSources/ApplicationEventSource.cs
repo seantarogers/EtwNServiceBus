@@ -10,15 +10,13 @@ namespace PerformanceComparisons.EventSources
         {
             public const EventKeywords DebugTracing = (EventKeywords)1;
         }
-        
-        [Event(EventSourceConstants.EventSourceDebug, 
-            Level = EventLevel.Informational, 
-            Keywords = Keywords.DebugTracing)]
-        public void Debug(string source, string debugMessage)
+
+        [Event(EventSourceConstants.EventSourceError, Level = EventLevel.Informational, Keywords = Keywords.DebugTracing)]
+        public void Error(string source, string errorMessage)
         {
             if (IsEnabled())
             {
-                WriteEvent(EventSourceConstants.EventSourceDebug, source, debugMessage);
+                WriteEvent(EventSourceConstants.EventSourceError, source, errorMessage);
             }
         }
     }

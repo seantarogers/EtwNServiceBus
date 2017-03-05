@@ -1,14 +1,20 @@
-﻿using System;
-
+﻿using Consumer.Adapters;
+using log4net;
 using Microsoft.Diagnostics.Tracing.Session;
 
 namespace Consumer.Functions
 {
     public class TraceSessionManager : ITraceSessionManager
     {
+        private readonly ILog logger;
         private static readonly object thisLock = new object();
-        
-        public TraceEventSession CreateTraceEventSession(string sessionName, string eventSourceName)
+
+        public TraceSessionManager(ILog logger)
+        {
+            this.logger = logger;
+        }
+
+        public ITraceEventSessionAdapter CreateTraceEventSession(string sessionName, string eventSourceName)
         {
             lock (thisLock)
             {
@@ -19,15 +25,15 @@ namespace Consumer.Functions
 
                 var traceEventSession = new TraceEventSession(sessionName, null);
                 traceEventSession.EnableProvider(eventSourceName);
-                return traceEventSession;
+                return new TraceEventSessionAdapter(traceEventSession);
             }
         }
 
-        public void DisposeTraceEventSession(string sessionName, TraceEventSession traceEventSession)
+        public void DisposeTraceEventSession(string sessionName, ITraceEventSessionAdapter traceEventSessionAdapter)
         {
             lock (thisLock)
             {
-                if (traceEventSession == null)
+                if (traceEventSessionAdapter == null)
                 {
                     return;
                 }
@@ -37,23 +43,23 @@ namespace Consumer.Functions
                     return;
                 }
 
-                if (traceEventSession.EventsLost > 0)
+                if (traceEventSessionAdapter.EventsLost > 0)
                 {
-                    Console.WriteLine($"Session {sessionName} is closing down. This session lost {traceEventSession.EventsLost} events.");
+                    logger.Error($"Session {sessionName} is closing down. This session lost {traceEventSessionAdapter.EventsLost} events.");
                 }
 
-                traceEventSession.Dispose();
+                traceEventSessionAdapter.Dispose();
             }
         }
 
-        private static void DisposeExistingSession(string sessionName)
+        private void DisposeExistingSession(string sessionName)
         {
-            Console.WriteLine($"Tracing session {sessionName} already exists, will remove and create a new one.");
+            logger.Debug($"Tracing session {sessionName} already exists, will remove and create a new one.");
 
             var existingTraceEventSession = new TraceEventSession(sessionName);
             existingTraceEventSession.Dispose();
         }
 
-        private static bool TraceEventSessionIsActive(string sessionName) => TraceEventSession.GetActiveSessionNames().Contains(sessionName);
+        private bool TraceEventSessionIsActive(string sessionName) => TraceEventSession.GetActiveSessionNames().Contains(sessionName);
     }
 }

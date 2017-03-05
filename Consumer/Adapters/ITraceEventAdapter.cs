@@ -1,7 +1,7 @@
-﻿namespace Consumer.Adapters
-{
-    using System;
+﻿using System;
 
+namespace Consumer.Adapters
+{
     public interface ITraceEventAdapter
     {
         string EventName { get; }

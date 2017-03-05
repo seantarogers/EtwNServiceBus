@@ -1,20 +1,20 @@
 ﻿using System;
-using System.Configuration;
+    using System.Configuration;
 
 namespace Consumer.CustomConfiguration
 {
     [ConfigurationCollection(typeof(EventConsumerConfigurationElement))]
-    public class EventConsumerElementCollection : ConfigurationElementCollection
+    public class EventConsumersElement : ConfigurationElementCollection
     {
         private const string PropertyName = "eventConsumer";
+        private const string DeploymentLocationProperty = "deploymentLocation";
+
+        [ConfigurationProperty(DeploymentLocationProperty, IsRequired = true, IsKey = true)]
+        public DeploymentLocationType DeploymentLocation => (DeploymentLocationType)Enum.Parse(typeof(DeploymentLocationType), base[DeploymentLocationProperty].ToString());
 
         public override ConfigurationElementCollectionType CollectionType => ConfigurationElementCollectionType.BasicMapAlternate;
 
         protected override string ElementName => PropertyName;
-
-        protected override bool IsElementName(string elementName) => elementName.Equals(PropertyName, StringComparison.InvariantCultureIgnoreCase);
-
-        public override bool IsReadOnly() => false;
 
         protected override ConfigurationElement CreateNewElement() => new EventConsumerConfigurationElement();
 

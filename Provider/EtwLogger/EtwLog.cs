@@ -28,77 +28,77 @@ namespace Provider.EtwLogger
 
         public void Debug(string message)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message));
+            busEventSource.DebugFormat(FormatMessage(message));
         }
 
         public void Debug(string message, Exception exception)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message), exception.ToString());
+            busEventSource.DebugFormat(FormatMessage(message), exception.ToString());
         }
 
         public void DebugFormat(string format, params object[] args)
         {
-            busEventSource.DebugFormat(this, FormatMessage(format), args);
+            busEventSource.DebugFormat(FormatMessage(format), args);
         }
 
         public void Info(string message)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message));
+            busEventSource.DebugFormat(FormatMessage(message));
         }
 
         public void Info(string message, Exception exception)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message), exception.ToString());
+            busEventSource.DebugFormat(FormatMessage(message), exception.ToString());
         }
 
         public void InfoFormat(string format, params object[] args)
         {
-            busEventSource.DebugFormat(this, FormatMessage(format), args);
+            busEventSource.DebugFormat(FormatMessage(format), args);
         }
 
         public void Warn(string message)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message));
+            busEventSource.DebugFormat(FormatMessage(message));
         }
 
         public void Warn(string message, Exception exception)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message), exception.ToString());
+            busEventSource.DebugFormat(FormatMessage(message), exception.ToString());
         }
 
         public void WarnFormat(string format, params object[] args)
         {
-            busEventSource.DebugFormat(this, FormatMessage(format), args);
+            busEventSource.DebugFormat(FormatMessage(format), args);
         }
 
         public void Error(string message)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message));
+            busEventSource.DebugFormat(FormatMessage(message));
         }
 
         public void Error(string message, Exception exception)
         {
-            busEventSource.DebugFormat(this, FormatMessage(message), exception.ToString());
+            busEventSource.DebugFormat(FormatMessage(message), exception.ToString());
         }
 
         public void ErrorFormat(string format, params object[] args)
         {
-            busEventSource.ErrorFormat(this, FormatMessage(format), args);
+            busEventSource.ErrorFormat(FormatMessage(format), args);
         }
 
         public void Fatal(string message)
         {
-            busEventSource.ErrorFormat(this, FormatMessage(message));
+            busEventSource.ErrorFormat(FormatMessage(message));
         }
 
         public void Fatal(string message, Exception exception)
         {
-            busEventSource.ErrorFormat(this, FormatMessage(message), exception.ToString());
+            busEventSource.ErrorFormat(FormatMessage(message), exception.ToString());
         }
 
         public void FatalFormat(string format, params object[] args)
-        {
-            busEventSource.ErrorFormat(this, FormatMessage(format), args);
+        { 
+            busEventSource.ErrorFormat(FormatMessage(format), args);
         }
 
         private string FormatMessage(string message) => $"Name: {name}, Message: {message}";

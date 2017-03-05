@@ -27,8 +27,8 @@ namespace Provider
                 StartNServiceBusEndpoint();
                 StartOwinWebHost();
 
-                var applicationEventSource = new ApplicationEventSource();
-                applicationEventSource.DebugFormat(this, "successfully started event provider");
+                var applicationEventSource = new ApplicationEventSource<ServiceHost>();
+                applicationEventSource.DebugFormat("successfully started event provider");
             }
             catch (Exception exception)
             {
@@ -64,15 +64,22 @@ namespace Provider
 
         private static void StartNServiceBusEndpoint()
         {
-            Container = CreateContainer();
-
             SetUpNServiceBusEtwLogger();
 
-            var endpointConfiguration = CreateSendOnlyEndpointConfiguration(Container);
-            EndpointInstance = Endpoint.Start(endpointConfiguration).Result;
+            var endpointConfiguration = CreateSendOnlyEndpointConfiguration();
+            EndpointInstance = Endpoint.Start(endpointConfiguration)
+                .Result;
+
             var containerBuilder = new ContainerBuilder();
+            containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
+
+            //generic singleton so each generic source can be quickly resolved after first use
+            containerBuilder.RegisterGeneric(typeof(ApplicationEventSource<>))
+                .As(typeof(IApplicationEventSource<>))
+                .SingleInstance();
+
             containerBuilder.RegisterInstance(EndpointInstance);
-            containerBuilder.Update(Container);
+            Container = containerBuilder.Build();
         }
 
         private static void SetUpNServiceBusEtwLogger()
@@ -81,11 +88,10 @@ namespace Provider
             loggerDefinition.Initialize(new BusEventSource(), LogLevel.Debug);
         }
 
-        private static EndpointConfiguration CreateSendOnlyEndpointConfiguration(ILifetimeScope container)
+        private static EndpointConfiguration CreateSendOnlyEndpointConfiguration()
         {
             var endpointConfiguration = new EndpointConfiguration("Provider");
             endpointConfiguration.UseSerialization<JsonSerializer>();
-            endpointConfiguration.UseContainer<AutofacBuilder>(c => c.ExistingLifetimeScope(container));
             endpointConfiguration.DisableFeature<MessageDrivenSubscriptions>();
 
             var conventions = endpointConfiguration.Conventions();
@@ -99,8 +105,10 @@ namespace Provider
         {
             var containerBuilder = new ContainerBuilder();
             containerBuilder.RegisterApiControllers(Assembly.GetExecutingAssembly());
-            containerBuilder.RegisterType<ApplicationEventSource>()
-                .As<IApplicationEventSource>()
+
+            //generic singleton so each generic source can be quickly resolved after first use
+            containerBuilder.RegisterGeneric(typeof(ApplicationEventSource<>))
+                .As(typeof(IApplicationEventSource<>))
                 .SingleInstance();
             return containerBuilder.Build();
         }

@@ -1,10 +1,9 @@
-﻿namespace Consumer
-{
-    using System;
+﻿using System;
 
+namespace Consumer.Functions
+{
     public class EventPayload
     {
-        public EventLevelType EventLevel { get; set; }
         public string ProviderName { get; set; }
         public bool IsValid { get; set; }
         public string TraceSource { get; set; }

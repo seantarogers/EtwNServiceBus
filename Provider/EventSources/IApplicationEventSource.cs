@@ -1,9 +1,10 @@
 ﻿namespace Provider.EventSources
 {
-    public interface IApplicationEventSource
+    // ReSharper disable once UnusedTypeParameter
+    public interface IApplicationEventSource<TSource>
     {
-        void DebugFormat(object source, string debugMessage, params object[] parameters);
+        void DebugFormat(string debugMessage, params object[] parameters);
 
-        void ErrorFormat(object source, string errorMessage, params object[] parameters);
+        void ErrorFormat(string errorMessage, params object[] parameters);
     }
 }

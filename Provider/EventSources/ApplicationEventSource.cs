@@ -1,35 +1,39 @@
 ﻿using System.Diagnostics.Tracing;
-
 using Infrastructure;
 
 namespace Provider.EventSources
 {
     [EventSource(Name = EventSourceConstants.ApplicationEventSource)]
-    public sealed class ApplicationEventSource : EventSource, IApplicationEventSource
+    public sealed class ApplicationEventSource<TSource> : EventSource, IApplicationEventSource<TSource>
     {
+        private readonly string eventSource;
+
         public class Keywords
         {
             public const EventKeywords DebugTracing = (EventKeywords)1;
             public const EventKeywords ErrorTracing = (EventKeywords)2;
         }
 
-        [NonEvent]
-        public void DebugFormat(object source, string debugMessage, params object[] parameters)
+        public ApplicationEventSource()
         {
-            var debug = string.Format(debugMessage, parameters);
-            Debug(source.ToString(), debug);
+            //get source once and reuse
+            eventSource = typeof(TSource).ToString();
+        }
+        
+        [NonEvent]
+        public void DebugFormat(string debugMessage, params object[] parameters)
+        {
+            Debug(eventSource, string.Format(debugMessage, parameters));
         }
 
         [NonEvent]
-        public void ErrorFormat(object source, string errorMessage, params object[] parameters)
+        public void ErrorFormat(string errorMessage, params object[] parameters)
         {
-            var error = string.Format(errorMessage, parameters);
-            Error(source.ToString(), error);
+            Error(eventSource, string.Format(errorMessage, parameters));
         }
-        
-        [Event(EventSourceConstants.EventSourceDebug, 
-            Level = EventLevel.Informational, 
-            Keywords = Keywords.DebugTracing)]
+
+        [Event(EventSourceConstants.EventSourceDebug, Level = EventLevel.Informational, Keywords = Keywords.DebugTracing
+            )]
         public void Debug(string source, string debugMessage)
         {
             if (IsEnabled())
@@ -38,9 +42,7 @@ namespace Provider.EventSources
             }
         }
 
-        [Event(EventSourceConstants.EventSourceError, 
-            Level = EventLevel.Error, 
-            Keywords = Keywords.ErrorTracing)]
+        [Event(EventSourceConstants.EventSourceError, Level = EventLevel.Error, Keywords = Keywords.ErrorTracing)]
         public void Error(string source, string errorMessage)
         {
             if (IsEnabled())

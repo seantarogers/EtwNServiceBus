@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using Consumer.Adapters;
-using Consumer.Extensions;
 
 namespace Consumer.Functions
 {
@@ -25,7 +24,6 @@ namespace Consumer.Functions
 
             return new EventPayload
             {
-                EventLevel = traceEventAdapter.EventName.ToEventLevel(),
                 TraceDate = traceEventAdapter.TimeStamp,
                 TraceSource = traceSource,
                 IsValid = true,
@@ -52,8 +50,8 @@ namespace Consumer.Functions
             return stringBuilder.ToString().Trim();
         }
 
-        private static bool IsSourceItem(ITraceEventAdapter traceEventAdapter, int i) => 
-            traceEventAdapter.PayloadNames[i].Equals(TraceSourceItemName, StringComparison.OrdinalIgnoreCase);
+        private static bool IsSourceItem(ITraceEventAdapter traceEventAdapter, int index) 
+            => traceEventAdapter.PayloadNames[index].Equals(TraceSourceItemName, StringComparison.OrdinalIgnoreCase);
 
         private static bool TryGetTraceSource(ITraceEventAdapter traceEventAdapter, out string traceSource)
         {
@@ -68,7 +66,6 @@ namespace Consumer.Functions
             return !string.IsNullOrWhiteSpace(traceSource);
         }
 
-        private static bool PayloadIsEmpty(ITraceEventAdapter traceEventAdapter) => 
-            traceEventAdapter.PayloadNames == null || !traceEventAdapter.PayloadNames.Any();
+        private static bool PayloadIsEmpty(ITraceEventAdapter traceEventAdapter) => traceEventAdapter.PayloadNames == null || !traceEventAdapter.PayloadNames.Any();
     }
 }

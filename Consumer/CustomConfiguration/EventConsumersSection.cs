@@ -1,15 +1,12 @@
-﻿namespace Consumer.CustomConfiguration
-{
-    using System.Configuration;
+﻿using System.Configuration;
 
+namespace Consumer.CustomConfiguration
+{
     public class EventConsumersSection : ConfigurationSection
     {
-        private const string EventConsumersProperty = "eventConsumers";
-        private const string EventConsumersSectionName = "eventConsumersSection";
+        [ConfigurationProperty("", IsDefaultCollection = true)]
+        public EventConsumersElementCollection EventConsumers => (EventConsumersElementCollection)base[""];
 
-        public static EventConsumersSection Section { get; } = ConfigurationManager.GetSection(EventConsumersSectionName) as EventConsumersSection;
-
-        [ConfigurationProperty(EventConsumersProperty)]
-        public EventConsumerElementCollection EventConsumerElements => (EventConsumerElementCollection) base[EventConsumersProperty];
+        public static EventConsumersSection Section => ConfigurationManager.GetSection("eventConsumersSection") as EventConsumersSection;
     }
-}   
+}

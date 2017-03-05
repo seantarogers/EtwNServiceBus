@@ -1,132 +1,160 @@
 ﻿using System;
+using System.Collections.Generic;
 using Consumer.Adapters;
-using Consumer.Constants;
-using Consumer.CustomConfiguration;
 using Consumer.Functions;
-using Microsoft.Diagnostics.Tracing;
-using Microsoft.Diagnostics.Tracing.Session;
+using log4net;
+using static Consumer.Constants.ConsumerConstants;
+using static Consumer.CustomConfiguration.EventType;
+using Consumer.CustomConfiguration;
 
 namespace Consumer.Consumers
 {
     public class EventConsumer : IEventConsumer
     {
         private readonly IEventPayloadBuilder eventPayloadBuilder;
+        private readonly IConsumerLoggerBuilder consumerLoggerBuilder;
         private readonly ITraceSessionManager traceSessionManager;
-        private EventConsumerConfigurationElement eventConsumerConfiguration;
-        private TraceEventSession traceEventSession;
-        
+        private readonly ILog logger;
+
+        private ILog eventConsumerLogger;
+        private IEventConsumerConfigurationElement eventConsumerConfiguration;
+        private ITraceEventSessionAdapter traceEventSession;
+        private Action<Exception> raiseErrorInParentThread;
+        private Dictionary<EventType, Func<ILog>> consumerLoggerMapper;
+
+        private const string YyyyMmDdHhMmSs = "{0:yyyy-MM-dd HH:mm:ss} {1} {2}";
         private const string Session = "-Session";
+
+        public string Name => eventConsumerConfiguration.Name;
 
         public EventConsumer(
             ITraceSessionManager traceSessionManager,
-            IEventPayloadBuilder eventPayloadBuilder)
+            IConsumerLoggerBuilder consumerLoggerBuilder,
+            IEventPayloadBuilder eventPayloadBuilder,
+            ILog logger)
         {
             this.traceSessionManager = traceSessionManager;
+            this.consumerLoggerBuilder = consumerLoggerBuilder;
             this.eventPayloadBuilder = eventPayloadBuilder;
+            this.logger = logger;
+            InitializeConsumerLoggerMapper();
         }
 
-        public void Start(EventConsumerConfigurationElement eventConsumerConfigurationElement, Action<Exception> raiseException)
+        public void Start(IEventConsumerConfigurationElement eventConsumerConfigurationElement, Action<Exception> onError)
         {
             eventConsumerConfiguration = eventConsumerConfigurationElement;
-            
+            raiseErrorInParentThread = onError;
+
+            eventConsumerLogger = GetConfiguredLoggerForThisEventConsumer();
+
             try
             {
                 CreateTraceEventSession();
                 SubscribeToDebugTraceEventStream();
                 SubscribeToErrorTraceEventStream();
+
                 StartTraceEventSession();
             }
             catch (Exception exception)
             {
-                Console.WriteLine($"Exception raised in Event Consumer: {exception}");
-                raiseException(exception);
+                logger.ErrorFormat(EventConsumerException, eventConsumerConfiguration.EventSource, exception);
+                raiseErrorInParentThread(exception);
             }
         }
 
         public void Stop()
         {
-            traceSessionManager.DisposeTraceEventSession(
-                eventConsumerConfiguration.EventSource + Session,
-                traceEventSession);
+            traceSessionManager.DisposeTraceEventSession(eventConsumerConfiguration.EventSource + Session, traceEventSession);
         }
-        
+
+        private ILog GetConfiguredLoggerForThisEventConsumer() => consumerLoggerMapper[eventConsumerConfiguration.TraceEventType].Invoke();
+
         private void StartTraceEventSession()
         {
-            traceEventSession.Source.Process();
+            traceEventSession.Process();
         }
 
         private void CreateTraceEventSession()
         {
-            traceEventSession =
-                traceSessionManager.CreateTraceEventSession(
-                    eventConsumerConfiguration.EventSource + Session,
-                    eventConsumerConfiguration.EventSource);
+            traceEventSession = traceSessionManager.CreateTraceEventSession(eventConsumerConfiguration.EventSource + Session, eventConsumerConfiguration.EventSource);
         }
 
         private void SubscribeToDebugTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(
-                eventConsumerConfiguration.EventSource,
-                ConsumerConstants.DebugLevel);
+            var debugEventStream = traceEventSession.Observe(eventConsumerConfiguration.EventSource, DebugEvents);
 
-            eventStream.Subscribe(
+            debugEventStream.Subscribe(
                 traceEvent => DebugEventSink(new TraceEventAdapter(traceEvent)),
-                exception =>
-                Console.WriteLine(
-                    $"An exception was raised whilst consuming an debug event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
-                () =>
-                Console.WriteLine(
-                    $"The debug event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
+                exception => logger.ErrorFormat(DebugEventStreamException, eventConsumerConfiguration.EventSource, exception),
+                () => logger.ErrorFormat(DebugEventStreamComplete, eventConsumerConfiguration.EventSource));
         }
 
         private void SubscribeToErrorTraceEventStream()
         {
-            var eventStream = traceEventSession.Source.Dynamic.Observe(
-                eventConsumerConfiguration.EventSource,
-                ConsumerConstants.ErrorLevel);
+            var errorEventStream = traceEventSession.Observe(eventConsumerConfiguration.EventSource, ErrorEvents);
 
-            eventStream.Subscribe(
+            errorEventStream.Subscribe(
                 traceEvent => ErrorEventSink(new TraceEventAdapter(traceEvent)),
-                exception =>
-                Console.WriteLine(
-                    $"An exception was raised whilst consuming an error event from the event stream. Event processing will now stop. Event Source: {eventConsumerConfiguration.EventSource}, Details: {exception}"),
-                () =>
-                Console.WriteLine(
-                    $"The error event stream has completed for source: {eventConsumerConfiguration.EventSource}."));
+                exception => logger.ErrorFormat(ErrorEventStreamException, eventConsumerConfiguration.EventSource, exception),
+                () => logger.ErrorFormat(ErrorEventStreamComplete, eventConsumerConfiguration.EventSource));
         }
-        
+
         private void ErrorEventSink(ITraceEventAdapter traceEventAdapter)
         {
             var eventPayload = eventPayloadBuilder.Build(traceEventAdapter);
             if (!eventPayload.IsValid)
             {
-                Console.WriteLine("event payload is not valid");
+                logger.ErrorFormat(InvalidPayload, traceEventAdapter.ProviderName);
                 return;
             }
 
-            //in our prod version we use easylogger here to write data to a db table, file and windows event log
-            
-            Console.WriteLine("==========================================");
-            Console.WriteLine($"ERROR event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
-            Console.WriteLine("==========================================");
-            Console.WriteLine("");
+            SetCustomAdoPropertiesToCurrentThread(traceEventAdapter);
+            eventConsumerLogger.ErrorFormat(YyyyMmDdHhMmSs, eventPayload.TraceDate, eventPayload.TraceSource, eventPayload.Payload);
         }
-        
+
         private void DebugEventSink(ITraceEventAdapter traceEventAdapter)
         {
             var eventPayload = eventPayloadBuilder.Build(traceEventAdapter);
             if (!eventPayload.IsValid)
             {
-                Console.WriteLine("event payload is not valid");
+                logger.ErrorFormat(InvalidPayload, traceEventAdapter.ProviderName);
                 return;
             }
 
-            //in our prod version we use easylogger here to write data to a db table, file and windows event log
+            SetCustomAdoPropertiesToCurrentThread(traceEventAdapter);
+            eventConsumerLogger.DebugFormat(YyyyMmDdHhMmSs, eventPayload.TraceDate, eventPayload.TraceSource, eventPayload.Payload);
+        }
 
-            Console.WriteLine("==========================================");
-            Console.WriteLine($"DEBUG event received. Event source: {eventConsumerConfiguration.EventSource}, application: {eventConsumerConfiguration.ApplicationName} {eventPayload.TraceDate.ToString("yyyy-MM-dd HH:mm:ss")} {eventPayload.TraceSource} {eventPayload.Payload}");
-            Console.WriteLine("==========================================");
-            Console.WriteLine("");
+        private void SetCustomAdoPropertiesToCurrentThread(ITraceEventAdapter traceEventAdapter)
+        {
+            LogicalThreadContext.Properties["Logger"] = eventConsumerConfiguration.Name;
+            LogicalThreadContext.Properties["LogDate"] = traceEventAdapter.TimeStamp;
+            LogicalThreadContext.Properties["ApplicationName"] = eventConsumerConfiguration.ApplicationName;
+        }
+
+        private void InitializeConsumerLoggerMapper()
+        {
+            consumerLoggerMapper = new Dictionary<EventType, Func<ILog>>
+            {
+                {
+                    Application, () => consumerLoggerBuilder.BuildForApplicationTracing(
+                        eventConsumerConfiguration.RollingLogPath,
+                        eventConsumerConfiguration.Name,
+                        eventConsumerConfiguration.ApplicationName)
+                },
+                {
+                    Bus, () => consumerLoggerBuilder.BuildForBusTracing(
+                        eventConsumerConfiguration.RollingLogPath,
+                        eventConsumerConfiguration.Name,
+                        eventConsumerConfiguration.ApplicationName)
+                },
+                {
+                    SignalR, () => consumerLoggerBuilder.BuildForSignalRTracing(
+                        eventConsumerConfiguration.RollingLogPath,
+                        eventConsumerConfiguration.Name,
+                        eventConsumerConfiguration.ApplicationName)
+                }
+            };
         }
     }
 }

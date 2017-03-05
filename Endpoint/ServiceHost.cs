@@ -45,16 +45,10 @@ namespace Endpoint
             return true;
         }
 
-        private void StartNServiceBusEndpoint()
+        private static void StartNServiceBusEndpoint()
         {
             var endpointConfiguration = CreateEndpointConfiguration();
-
-            EndpointInstance = NServiceBus.Endpoint.Start(endpointConfiguration).Result;
-
-            var containerRegisterBusConfig = new ContainerBuilder();
-            containerRegisterBusConfig.RegisterInstance(EndpointInstance);
-            containerRegisterBusConfig.Update(Container);            
-            
+            EndpointInstance = NServiceBus.Endpoint.Start(endpointConfiguration).GetAwaiter().GetResult();
         }
 
         private static EndpointConfiguration CreateEndpointConfiguration()

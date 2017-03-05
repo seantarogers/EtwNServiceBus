@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Consumer.Consumers;
 using Consumer.CustomConfiguration;
 using Consumer.Extensions;
+using Consumer.Functions;
+using Consumer.Providers;
+using log4net;
+using log4net.Config;
 using SimpleInjector;
 using Topshelf;
 
@@ -13,18 +18,23 @@ namespace Consumer
     public class ServiceHost : IServiceHost
     {
         private List<IEventConsumer> eventConsumers;
-        private static HostControl serviceHostControl;
-
-        private static Container Container { get; set; }
+        private IBufferFlusher bufferFlusher;
+        private HostControl thisHostControl;
+        private ILog logger;
+        private Container container;
+        private ConfigurationProvider configurationProvider;
 
         public bool Start(HostControl hostControl)
         {
-            serviceHostControl = hostControl;
-            
+            thisHostControl = hostControl;
+
             try
             {
                 CreateContainer();
+                CreateApplicationLogger();
                 StartEventConsumers();
+                StartBufferFlusher();
+                logger.Debug("Consumer has started listening for traces...");
             }
             catch (AggregateException aggregateException)
             {
@@ -33,20 +43,29 @@ namespace Consumer
             }
             catch (Exception exception)
             {
-                Console.WriteLine($"An exception was raised in the ServiceHost. Details: {exception}");
+                logger?.ErrorFormat($"An exception was raised in the ServiceHost. Details: {exception}");
                 return false;
             }
 
             return true;
-        }        
+        }
 
         public bool Stop()
         {
-            Console.WriteLine("Stop was called in the ServiceHost");
-            return StopEventConsumers();
+            try
+            {
+                logger.ErrorFormat("Stop was called in the ServiceHost");
+                StopEventConsumers();
+                bufferFlusher.Flush();
+            }
+            catch (Exception exception)
+            {
+                logger.ErrorFormat($"An error was raised whilst trying to stop an event Consumer. Details: {exception}");
+            }
+            return true;
         }
-        
-        private static void LogAggregateException(AggregateException aggregateException)
+
+        private void LogAggregateException(AggregateException aggregateException)
         {
             var stringBuilder = new StringBuilder();
             foreach (var innerException in aggregateException.Flatten().InnerExceptions)
@@ -54,59 +73,68 @@ namespace Consumer
                 stringBuilder.Append(innerException);
             }
 
-            Console.WriteLine($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
+            logger.ErrorFormat($"An exception was raised in the ServiceHost. Details: {stringBuilder}");
         }
 
-        private static void ConsumerError(Exception exception)
+        private void StopEventConsumers()
         {
-            Console.WriteLine($"An consumer error was raised. The windows service will be stopped. Details: {exception}");
-            serviceHostControl.Stop();
-        }
-
-        private bool StopEventConsumers()
-        {
-            try
+            foreach (var eventConsumer in eventConsumers)
             {
-                foreach (var eventConsumer in eventConsumers)
-                {
-                    var producerName = eventConsumer.GetType().FullName;
-                    Console.WriteLine($"Stopping event consumer : { producerName}");
-                    eventConsumer.Stop();
-                    Console.WriteLine($"Stopped event consumer : { producerName}");
-                }
+                logger.DebugFormat($"Stopping event consumer : {eventConsumer.Name}");
+                eventConsumer.Stop();
+                logger.DebugFormat($"Stopped event consumer: {eventConsumer.Name}");
             }
-            catch (Exception exception)
-            {
-                Console.WriteLine($"An error was raised whilst trying to stop an eventConsumer.Details: { exception}");
-                return false;
-            }
-            return true;
         }
 
         private void StartEventConsumers()
         {
             eventConsumers = new List<IEventConsumer>();
-            var eventConsumerElements = EventConsumersSection.Section.EventConsumerElements;
-            for (var i = 0; i < eventConsumerElements.Count; i++)
+            foreach (EventConsumersElement eventConsumersElement in EventConsumersSection.Section.EventConsumers)
             {
-                var eventConsumerConfigurationElement = eventConsumerElements[i];
+                if (ConsumersShouldBeStarted(eventConsumersElement))
+                {
+                    continue;
+                }
 
-                var eventConsumer = Container.GetInstance<IEventConsumer>();
-                Console.WriteLine($"Starting event Consumer: {eventConsumer.GetType().FullName}");
-
-                Task.Factory.StartNew(() => { eventConsumer.Start(eventConsumerConfigurationElement, ConsumerError); },
-                    TaskCreationOptions.LongRunning);
-
-                eventConsumers.Add(eventConsumer);
+                foreach (EventConsumerConfigurationElement eventConsumerConfigurationElement in eventConsumersElement)
+                {
+                    var eventConsumer = container.GetInstance<IEventConsumer>();
+                    logger.DebugFormat($"Starting event consumer: {eventConsumerConfigurationElement.Name}");
+                    Task.Factory.StartNew(() => { eventConsumer.Start(eventConsumerConfigurationElement, ConsumerError); }, TaskCreationOptions.LongRunning);
+                    eventConsumers.Add(eventConsumer);
+                }
             }
         }
 
-        private static void CreateContainer()
+        private void ConsumerError(Exception exception)
         {
-            Container = new Container();
-            Container.UseExecutionContextLifestyle();
-            Container.RegisterComponents();    
-            Container.Verify();        
+            logger.ErrorFormat($"An consumer error was raised. The windows service will be stopped. Details: {exception}");
+            thisHostControl.Stop();
+        }
+
+        private bool ConsumersShouldBeStarted(EventConsumersElement eventConsumersElement) => eventConsumersElement.DeploymentLocation != configurationProvider.DeploymentLocation
+                                                                                              && configurationProvider.DeploymentLocation != DeploymentLocationType.All;
+
+        private void CreateContainer()
+        {
+            container = new Container();
+            container.RegisterComponents();
+            container.Verify();
+
+            configurationProvider = container.GetInstance<ConfigurationProvider>();
+        }
+
+        private void CreateApplicationLogger()
+        {
+            CustomAdoNetAppenderInitializer.IntializeType();
+            XmlConfigurator.ConfigureAndWatch(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
+            logger = container.GetInstance<ILog>();
+        }
+
+        private void StartBufferFlusher()
+        {
+            bufferFlusher = container.GetInstance<IBufferFlusher>();
+            bufferFlusher.Start(configurationProvider.BufferFlushIntervalInSeconds);
         }
     }
 }
