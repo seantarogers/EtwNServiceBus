@@ -26,15 +26,15 @@ The buffer flusher ensures that the second level buffers do not cache stale data
 
 ## To Run Solution and view the Trace Results
 
-1. Add an NserviceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
+1. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
 2. Start the Provider, Consumer and Endpoint projects
 3. Browse to http://localhost:8089/api/test
-4. Wait for 100 seconds: 
-    + Observe the Error and InfoDebug database tables to view the debug and error traces from the Web Api 
-    + Observe the C:\logs\Provider\application-all.log to view the debug and error traces from the Web Api 
-    + Observe the C:\logs\Provider\bus-all.log to view the NServiceBus infrastructure logging
-    + Observe the Windows Event Log\Applications and Services Logs\EtwConsumerLog to view error traces from the Web Api
-    + Observe the C:\logs\Consumer\application-all.log to see the consumer logging
+4. Wait for 100 seconds (or change the BufferFlusher interval configuration) and check the following:
+    + Error and InfoDebug database tables to view the debug and error traces from the Web Api 
+    + C:\logs\Provider\application-all.log to view the debug and error traces from the Web Api 
+    + C:\logs\Provider\bus-all.log to view the NServiceBus infrastructure logging
+    + Windows Event Log\Applications and Services Logs\EtwConsumerLog to view error traces from the Web Api
+    + C:\logs\Consumer\application-all.log to see the Consumer service logging
     
 ## Architecture
 
