@@ -9,7 +9,7 @@ The Consumer was written as a simplified and easily deployable alternative to [t
 
 ## Performance Comparisons
 
-The PerformanceComparisons project compares the tracing performance of in process log4net (3 appenders configured: RollingLogFile, ADO and Windows Event log) against out of process ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
+The PerformanceComparisons project compares the tracing performance of in process Log4Net (with 3 appenders configured: RollingLogFile, ADO and Windows Event log) against out of process ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
 
 | Tracer            | Sync                                        | Number of traces in 10 seconds |
 | ----------------- | --------------------------------------------|--------------------------------|
@@ -18,11 +18,11 @@ The PerformanceComparisons project compares the tracing performance of in proces
 
 ## Buffering
 
-This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  Firstly, Etw will buffer trace events internally in it's buffer pool until the Consumer is available to read them.  Secondly, inside of the consumer we are agressively buffering both the writing to the database and the writing to the rolling log files.
+This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  Firstly, ETW will buffer trace events internally in it's buffer pool until the Consumer is available to read them.  Secondly, inside the Consumer service we are agressively buffering both the writing to the database and the writing to the rolling log files.  The Windows Event Log trace writing is not buffered as these will trigger SCOM email alerts and so we want to receive these as soon as an application error occurs.
 
 ## Buffer Flusher
 
-The Buffer Flusher ensures that the second level buffers do not cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. The Buffer Flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
+The buffer flusher ensures that the second level buffers do not cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. The buffer flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
 
 ## To Run Solution and view the Trace Results
 
