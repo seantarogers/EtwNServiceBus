@@ -24,17 +24,18 @@ This solution offers two levels of buffering of trace events. This is important 
 
 The Buffer Flusher ensures that the second level buffers do cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. 
 
-## To Run Solution
+## To Run Solution and view the Trace Results
 
 1. Add an NserviceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
 2. Start the Provider, Consumer and Endpoint projects
 3. Browse to http://localhost:8089/api/test
 4. Wait for 100 seconds: 
-    + Check the Error and InfoDebug database tables. 
-    + Check the C:\logs\Provider\application-all.log
-    + Check the C:\logs\Provider\bus-all.log
-    + Check the Windows Event Log\Applications and Services Logs\EtwConsumerLog to view errors logged
-
+    + Observe the Error and InfoDebug database tables to view the debug and error traces from the Web Api 
+    + Observe the C:\logs\Provider\application-all.log to view the debug and error traces from the Web Api 
+    + Observe the C:\logs\Provider\bus-all.log to view the NServiceBus infrastructure logging
+    + Observe the Windows Event Log\Applications and Services Logs\EtwConsumerLog to view error traces from the Web Api
+    + Observe the C:\logs\Consumer\application-all.log to see the consumer logging
+    
 ## Architecture
 
 ![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/EtwNServiceBusArchitecture.png)
