@@ -24,7 +24,7 @@ This solution offers two levels of buffering of trace events. This is important 
 
 The buffer flusher ensures that the second level buffers do not cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. The buffer flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
 
-## To Run Solution and view the Trace Results
+## To Run Solution And View The Trace Results
 
 1. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
 2. Start the Provider, Consumer and Endpoint projects
