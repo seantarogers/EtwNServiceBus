@@ -33,4 +33,4 @@ Coming soon...
 
 ## Architecture
 
-![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/EtwNServiceBusOverview.png)
+![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/EtwNServicebusArchitecture.png)
