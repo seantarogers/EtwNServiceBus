@@ -4,12 +4,12 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 
 ## Overview
 
-This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit Debug and Error trace events to ETW.
+This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit debug and error trace events to ETW.
 The Consumer was written as a simplified and easily deployable alternative to [the Semantic Logging Application Block (SLAB)](https://msdn.microsoft.com/en-us/library/dn440729(v=pandp.60).aspx). The Provider was written as a high performance logger for NServiceBus.
 
 ## Performance Comparisons
 
-The PerformanceComparisons project compares the tracing performance of in process Log4Net (with 3 appenders configured: RollingLogFile, ADO and Windows Event log) against out of process ETW over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
+The PerformanceComparisons project compares the tracing performance of in-process Log4Net (with 3 appenders configured: RollingLogFile, ADONet and Windows Event Log) against out-of-process ETW, over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
 
 | Tracer            | Sync                                        | Number of traces in 10 seconds |
 | ----------------- | --------------------------------------------|--------------------------------|
@@ -22,11 +22,11 @@ This solution offers two levels of buffering of trace events. This is important 
 
 ## Buffer Flusher
 
-The buffer flusher ensures that the second level buffers do not cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. The buffer flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
+The Buffer Flusher ensures that the second level buffers do not cache stale data when there is low tracing activity.  The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers).  This allows us to provide robust buffering without compromise. The flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
 
 ## Do I need to be using NServiceBus to use this?
 
-No, the Consumer service is simply an ETW consumer. It can used to just listen for application trace events.
+No, the Consumer service is simply an ETW consumer. It can used to just listen for standard application trace events.
 
 ## To Run Solution And View The Trace Results
 
