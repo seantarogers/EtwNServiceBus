@@ -16,6 +16,8 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 | ETW               | to the O/S                                  |8,495,000                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
+This test merely compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption of traces. As this is out of process with the ETW model the rate of consumption becomes much less important.
+
 ## First Level Buffering
 
 This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  
