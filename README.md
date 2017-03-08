@@ -41,7 +41,7 @@ The Buffer Flusher ensures that the second level buffers do not go stale when th
 
 No, the Consumer service is simply an ETW consumer. It can used to just listen for standard application trace events.
 
-## To Run Solution And View The Trace Results
+## To Run Solution And view the Trace Results
 
 1. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
 2. Start the Provider, Consumer and Endpoint projects
