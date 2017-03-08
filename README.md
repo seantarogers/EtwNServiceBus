@@ -35,6 +35,27 @@ The Buffer Flusher ensures that the second level buffers do not go stale when th
 
 No, the Consumer service is simply an ETW consumer. It can used to just listen for standard application trace events.
 
+## Consumer Configuration
+
+The Consumer service should be very simple to configure.  Each <EventConsumer> element relates to an ETW Session and an Event Source that a Provider will emit traces to.  The name of the Event Source is required and this must match the event source in the Provider.
+The EventType attribute relates to whether it is an Application trace or a Service Bus infrastructure trace.  The Bus traces can be quite noisy so we only want to write Bus errors to the database.  Where as we want to write all Application traces Debug and Error to the database.
+```
+ <eventConsumersSection>
+    <eventConsumers deploymentLocation="WebServer"> 
+      <eventConsumer name="ProviderApplicationEventConsumer" eventSource="Provider-Application-EventSource" applicationName="Provider" eventType="Application" rollingLogPath="c:\Logs\Provider\" />
+      <eventConsumer name="ProviderBusEventConsumer" eventSource="Provider-Bus-EventSource" applicationName="Provider" eventType="Bus" rollingLogPath="c:\Logs\Provider\" />
+     </eventConsumers>
+     <eventConsumers deploymentLocation="InternalApplicationServer"> 
+       <!-- add different event consumers app, bus or signalr that run on your internal application server-->
+     </eventConsumers>
+    <eventConsumers deploymentLocation="ExternalApplicationServer">
+      <!-- add different event consumers app, bus or signalr that run on your internal application server-->
+    </eventConsumers>
+  </eventConsumersSection>
+  <appSettings>
+
+```
+
 ## To Run Solution And View The Trace Results
 
 1. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
