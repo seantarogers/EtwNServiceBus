@@ -5,7 +5,7 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 ## Overview
 
 This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit debug and error trace events to ETW.
-The Consumer was written as a simplified and easily deployable alternative to the Semantic Logging Application Block. The Provider was written as a high performance logger for NServiceBus.
+  The Consumer was written as a simplified and easily deployable alternative to the Semantic Logging Application Block. The Provider was written as a high performance logger for NServiceBus.
 
 ## Performance Comparisons
 
@@ -17,13 +17,13 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
 This test merely compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption of traces. 
-However, as the Consumer is a non blocking, out of process service, the rate of consumption becomes much less important. 
-Nevertheless, in the interests of experimentation, with the first level ETW buffering (see next section) turned up to 300MB, and second level buffering set to 10,000 the Consumer was able to successfully consume and persist 3 million debug trace events in 4 minutes with zero events lost.
+However, as the Consumer is a non blocking, out of process service, the rate of consumption becomes much less important.  
+  Nevertheless, in the interests of experimentation, with the first level ETW buffering (see next section) turned up to 300MB, and second level buffering set to 10,000 the Consumer was able to successfully consume and persist 3 million debug trace events in 4 minutes with zero events lost.
 
 ## First Level Buffering
 
 This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  
-First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased via the app.config if needed.
+  First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased via the app.config if needed.
 
 ## Second Level Buffering
 
@@ -56,7 +56,7 @@ No, the Consumer service is simply an ETW consumer. It can used to just listen f
 ## Deployment
 
 The ETW Consumer should be deployed next to the Providers that are emiting the trace events.  So typically you would have one Consumer per logical server and that would provide event consumption for all sites and services running on that server.
-To support this, the Consumer service allows deployment of a sub set of consumers to specific named servers. It avoids the overhead of having to deploy and run all consumers on all servers.  For each server deployment set the DeploymentLocation:  
+  To support this, the Consumer service allows deployment of a sub set of consumers to specific named servers. It avoids the overhead of having to deploy and run all consumers on all servers.  For each server deployment set the DeploymentLocation:  
 ```<appSettings>
     <add key="DeploymentLocation" value="WebServer" /> 
 ```
