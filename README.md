@@ -5,7 +5,7 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 ## Overview
 
 This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit debug and error trace events to ETW.
-  The Consumer was written as a simplified and easily deployable alternative to the Semantic Logging Application Block. The Provider was written as a high performance logger for NServiceBus.
+  The Consumer was written as a simplified, modern and easily deployable alternative to the Semantic Logging Application Block. The Provider was written as a high performance logger for NServiceBus.
 
 ## Performance Comparisons
 
@@ -16,7 +16,7 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 | ETW Provider      | ETW Session                                 |8,495,000                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
-This test compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption and delivery of traces. However, as the Consumer is out of process and completely non blocking, the rate of consumption becomes much less im
+This test compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption and delivery of traces. However, it illustrates the almost zero latency tracing power of ETW. Moreover, as the Consumer is out of process and completely non blocking, the rate of consumption becomes much less important.
 
 ## First Level Buffering
 
