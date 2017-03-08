@@ -17,7 +17,7 @@ namespace Consumer.Functions
             {
                 File = rollingLogFilePath,
                 RollingStyle = RollingFileAppender.RollingMode.Composite,
-                MaxSizeRollBackups = 10,
+                MaxSizeRollBackups = 200,
                 MaxFileSize = thirtyMb,
                 AppendToFile = true,
                 PreserveLogFileNameExtension = true,

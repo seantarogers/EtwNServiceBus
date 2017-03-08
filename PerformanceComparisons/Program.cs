@@ -19,7 +19,7 @@
             XmlConfigurator.ConfigureAndWatch(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
 
             //1. Test push traces to log4net to rolling file appender for 10 seconds
-            RunStandardLog4NetTest();
+            //RunStandardLog4NetTest();
             
             //3. Test push traces to ETW for 10 seconds
             RunEtwTest();
