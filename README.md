@@ -13,7 +13,7 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 
 | Tracer            | Sync                                        | Number of traces in 10 seconds |
 | ----------------- | --------------------------------------------|--------------------------------|
-| ETW               | to the O/S                                  |8,495,000                       |
+| ETW               | to ETW Session                              |8,495,000                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
 This test merely compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption of traces. 
