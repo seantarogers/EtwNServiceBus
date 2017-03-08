@@ -42,4 +42,4 @@ No, the Consumer service is simply an ETW consumer. It can used to just listen f
     
 ## Architecture
 
-![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/EtwNServiceBusArchitecture.png)
+![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/ETWNServiceBusArchitecture.png)
