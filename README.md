@@ -16,8 +16,7 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 | ETW Provider      | ETW Session                                 |8,495,000                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
-This test compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption and delivery of traces. However, as the Consumer is out of process and completely non blocking, the rate of consumption becomes much less important.  
-  Nevertheless, in the interests of experimentation, with the first level ETW buffering (see next section) turned up to 300MB, and second level buffering set to 10,000 the Consumer was able to successfully consume and persist 3 million debug trace events in 4 minutes with zero events lost.
+This test compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption and delivery of traces. However, as the Consumer is out of process and completely non blocking, the rate of consumption becomes much less im
 
 ## First Level Buffering
 
