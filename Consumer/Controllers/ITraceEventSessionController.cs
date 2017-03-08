@@ -1,8 +1,9 @@
 using Consumer.Adapters;
 
-namespace Consumer.Functions
+namespace Consumer.Controllers
 {
-    public interface ITraceSessionManager
+
+    public interface ITraceEventSessionController
     {
         ITraceEventSessionAdapter CreateTraceEventSession(string sessionName, string eventSourceName);
         void DisposeTraceEventSession(string sessionName, ITraceEventSessionAdapter traceEventSession);

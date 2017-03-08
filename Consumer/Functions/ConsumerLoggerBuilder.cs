@@ -121,7 +121,7 @@ namespace Consumer.Functions
         {
             var bufferingForwardingAppender = new BufferingForwardingAppender
                                                   {
-                                                      BufferSize = configurationProvider.LoggingBufferSize,
+                                                      BufferSize = configurationProvider.SecondLevelBufferSizeInNumberOfEvents,
                                                       Fix = FixFlags.None, // all logs are created in the provider so no volitile fields
                                                       Lossy = false
                                                   };

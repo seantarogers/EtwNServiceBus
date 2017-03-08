@@ -97,7 +97,7 @@ namespace Consumer.Functions
                                           + "Culture = neutral, PublicKeyToken = b77a5c561934e089";
             return new AdoNetAppender
             {
-                BufferSize = configurationProvider.LoggingBufferSize,
+                BufferSize = configurationProvider.SecondLevelBufferSizeInNumberOfEvents,
                 CommandType = CommandType.StoredProcedure,
                 ConnectionType = connectionType,
                 ConnectionString = configurationProvider.PremiumFinanceAuditConnectionString,

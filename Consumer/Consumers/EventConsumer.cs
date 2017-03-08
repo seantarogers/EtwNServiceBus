@@ -6,6 +6,7 @@ using log4net;
 using static Consumer.Constants.ConsumerConstants;
 using static Consumer.CustomConfiguration.EventType;
 using Consumer.CustomConfiguration;
+using Consumer.Controllers;
 
 namespace Consumer.Consumers
 {
@@ -13,7 +14,7 @@ namespace Consumer.Consumers
     {
         private readonly IEventPayloadBuilder eventPayloadBuilder;
         private readonly IConsumerLoggerBuilder consumerLoggerBuilder;
-        private readonly ITraceSessionManager traceSessionManager;
+        private readonly ITraceEventSessionController traceEventSessionController;
         private readonly ILog logger;
 
         private ILog eventConsumerLogger;
@@ -28,12 +29,12 @@ namespace Consumer.Consumers
         public string Name => eventConsumerConfiguration.Name;
 
         public EventConsumer(
-            ITraceSessionManager traceSessionManager,
+            ITraceEventSessionController traceEventSessionController,
             IConsumerLoggerBuilder consumerLoggerBuilder,
             IEventPayloadBuilder eventPayloadBuilder,
             ILog logger)
         {
-            this.traceSessionManager = traceSessionManager;
+            this.traceEventSessionController = traceEventSessionController;
             this.consumerLoggerBuilder = consumerLoggerBuilder;
             this.eventPayloadBuilder = eventPayloadBuilder;
             this.logger = logger;
@@ -64,7 +65,7 @@ namespace Consumer.Consumers
 
         public void Stop()
         {
-            traceSessionManager.DisposeTraceEventSession(eventConsumerConfiguration.EventSource + Session, traceEventSession);
+            traceEventSessionController.DisposeTraceEventSession(eventConsumerConfiguration.EventSource + Session, traceEventSession);
         }
 
         private ILog GetConfiguredLoggerForThisEventConsumer() => consumerLoggerMapper[eventConsumerConfiguration.TraceEventType].Invoke();
@@ -76,7 +77,7 @@ namespace Consumer.Consumers
 
         private void CreateTraceEventSession()
         {
-            traceEventSession = traceSessionManager.CreateTraceEventSession(eventConsumerConfiguration.EventSource + Session, eventConsumerConfiguration.EventSource);
+            traceEventSession = traceEventSessionController.CreateTraceEventSession(eventConsumerConfiguration.EventSource + Session, eventConsumerConfiguration.EventSource);
         }
 
         private void SubscribeToDebugTraceEventStream()

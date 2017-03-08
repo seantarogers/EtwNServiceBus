@@ -122,10 +122,10 @@
     <Compile Include="Functions\IConsumerLoggerBuilder.cs" />
     <Compile Include="Functions\IEventPayloadBuilder.cs" />
     <Compile Include="Functions\IRollingLogFileAppenderBuilder.cs" />
-    <Compile Include="Functions\ITraceSessionManager.cs" />
+    <Compile Include="Controllers\ITraceEventSessionController.cs" />
     <Compile Include="Functions\IWindowEventLogAppenderBuilder.cs" />
     <Compile Include="Functions\RollingLogFileAppenderBuilder.cs" />
-    <Compile Include="Functions\TraceSessionManager.cs" />
+    <Compile Include="Controllers\TraceEventSessionController.cs" />
     <Compile Include="Functions\WindowEventLogAppenderBuilder.cs" />
     <Compile Include="IServiceHost.cs" />
     <Compile Include="Consumers\IEventConsumer.cs" />

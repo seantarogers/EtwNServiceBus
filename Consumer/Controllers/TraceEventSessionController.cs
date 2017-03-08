@@ -1,17 +1,22 @@
-﻿using Consumer.Adapters;
-using log4net;
-using Microsoft.Diagnostics.Tracing.Session;
-
-namespace Consumer.Functions
+﻿namespace Consumer.Controllers
 {
-    public class TraceSessionManager : ITraceSessionManager
+    using Adapters;
+    using Providers;
+
+    using log4net;
+
+    using Microsoft.Diagnostics.Tracing.Session;
+
+    public class TraceEventSessionController : ITraceEventSessionController
     {
         private readonly ILog logger;
+        private readonly ConfigurationProvider configurationProvider;
         private static readonly object thisLock = new object();
 
-        public TraceSessionManager(ILog logger)
+        public TraceEventSessionController(ILog logger, ConfigurationProvider configurationProvider)
         {
             this.logger = logger;
+            this.configurationProvider = configurationProvider;
         }
 
         public ITraceEventSessionAdapter CreateTraceEventSession(string sessionName, string eventSourceName)
@@ -23,7 +28,10 @@ namespace Consumer.Functions
                     DisposeExistingSession(sessionName);
                 }
 
-                var traceEventSession = new TraceEventSession(sessionName, null);
+                var traceEventSession = new TraceEventSession(sessionName, null)
+                                            {
+                                                BufferSizeMB = configurationProvider.FirstLevelBufferSizeInMb
+                                            };
                 traceEventSession.EnableProvider(eventSourceName);
                 return new TraceEventSessionAdapter(traceEventSession);
             }

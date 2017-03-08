@@ -6,11 +6,11 @@ using Consumer.Functions;
 using Consumer.Providers;
 using log4net;
 using SimpleInjector;
+using Consumer.Controllers;
+using Consumer.CustomConfiguration;
 
 namespace Consumer.Extensions
 {
-    using Consumer.CustomConfiguration;
-
     public static class ContainerExtensions
     {
         public static Container RegisterComponents(this Container container)
@@ -31,7 +31,7 @@ namespace Consumer.Extensions
 
         private static void RegisterManagers(Container container)
         {
-            container.RegisterSingleton<ITraceSessionManager, TraceSessionManager>();
+            container.RegisterSingleton<ITraceEventSessionController, TraceEventSessionController>();
         }
 
         private static void RegisterConsumers(Container container)
@@ -63,7 +63,8 @@ namespace Consumer.Extensions
                 {
                     c.PremiumFinanceAuditConnectionString = ConfigurationManager.ConnectionStrings["Logging"].ConnectionString;
                     c.DeploymentLocation = (DeploymentLocationType)Enum.Parse(typeof(DeploymentLocationType), ConfigurationManager.AppSettings["DeploymentLocation"]);
-                    c.LoggingBufferSize = int.Parse(ConfigurationManager.AppSettings["LoggingBufferSize"]);
+                    c.FirstLevelBufferSizeInMb = int.Parse(ConfigurationManager.AppSettings["FirstLevelBufferSizeInMb"]);
+                    c.SecondLevelBufferSizeInNumberOfEvents = int.Parse(ConfigurationManager.AppSettings["SecondLevelBufferSizeInNumberOfEvents"]);
                     c.RunLog4NetInDebugMode = bool.Parse(ConfigurationManager.AppSettings["RunLog4NetInDebugMode"]);
                     c.BufferFlushIntervalInSeconds = int.Parse(ConfigurationManager.AppSettings["BufferFlushIntervalInSeconds"]);
                 });
