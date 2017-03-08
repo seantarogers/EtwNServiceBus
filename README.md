@@ -16,12 +16,13 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 | ETW               | to the O/S                                  |8,495,000                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
-This test merely compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption of traces. However, with the ETW architecture, trace consumption is out of process and non blocking so it's rate becomes much less important.
+This test merely compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption of traces. 
+However, as the Consumer is a non blocking, out of process service, the rate of consumption becomes much less important. Nevertheless, in the interests of experimentation, with the first level ETW buffering (see next section) turned up to 300MB, and second level buffer set to 10,000 the Consumer was able to successfully consume and process 3 million debug trace events in 4 minutes with zero events lost.
 
 ## First Level Buffering
 
 This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  
-First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased if needed.
+First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased via the app.config if needed.
 
 ## Second Level Buffering
 
