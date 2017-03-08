@@ -33,6 +33,10 @@ Second level buffering is provided by the Consumer service. It agressively buffe
 
 The Buffer Flusher ensures that the second level buffers do not go stale when there is low tracing activity. The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers). This allows us to provide robust buffering without compromise. The flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
 
+## Architecture
+
+![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/ETWNServiceBusArchitecture.png)
+
 ## Do I need to be using NServiceBus to use this?
 
 No, the Consumer service is simply an ETW consumer. It can used to just listen for standard application trace events.
@@ -49,10 +53,6 @@ No, the Consumer service is simply an ETW consumer. It can used to just listen f
     + Windows Event Log\Applications and Services Logs\EtwConsumerLog to view error traces from the Web Api
     + C:\logs\Consumer\application-all.log to see the Consumer service logging
     
-## Architecture
-
-![Image of Architecture](https://github.com/seantarogers/EtwNServiceBus/blob/master/ETWNServiceBusArchitecture.png)
-
 ## Deployment
 
 The ETW Consumer should be deployed next to the Providers that are emiting the trace events.  So typically you would have one Consumer per logical server and that would provide event consumption for all sites and services running on that server.
