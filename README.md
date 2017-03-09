@@ -41,10 +41,11 @@ No, the Consumer service is simply an ETW consumer. It can used to just listen f
 
 ## To Run Solution And view the Trace Results
 
-1. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
-2. Start the Provider, Consumer and Endpoint projects
-3. Browse to http://localhost:8089/api/test
-4. Wait for 100 seconds (or change the BufferFlusher interval configuration) and check the following:
+1. Run the CreateTraceTablesAndSprocs.sql to create the SQL Sink tables and Sprocs.
+2. Add an NServiceBus license to C:\NServiceBus\License.xml (skip this step if just interested in the consumer)
+3. Run the Provider, Consumer and Endpoint projects
+4. Browse to http://localhost:8089/api/test
+5. Wait for 100 seconds (or change the BufferFlusher interval configuration) and check the following:
     + Error and InfoDebug database tables to view the debug and error traces from the Web Api 
     + C:\logs\Provider\application-all.log to view the debug and error traces from the Web Api 
     + C:\logs\Provider\bus-all.log to view the NServiceBus infrastructure logging
