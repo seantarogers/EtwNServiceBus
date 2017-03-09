@@ -1,12 +1,10 @@
-﻿namespace Consumer.Controllers
+﻿using Consumer.Adapters;
+using Consumer.Providers;
+using log4net;
+using Microsoft.Diagnostics.Tracing.Session;
+
+namespace Consumer.Controllers
 {
-    using Adapters;
-    using Providers;
-
-    using log4net;
-
-    using Microsoft.Diagnostics.Tracing.Session;
-
     public class TraceEventSessionController : ITraceEventSessionController
     {
         private readonly ILog logger;

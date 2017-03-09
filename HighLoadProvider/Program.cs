@@ -12,7 +12,7 @@
 
             var applicationEventSource = new ApplicationEventSource();
             var i = 0;
-            while (i <= 3000000)
+            while (i <= 1000000)
             {
                 applicationEventSource.Debug("Program", $"ETW debug statement. Trace number: {i}");
                 i++;

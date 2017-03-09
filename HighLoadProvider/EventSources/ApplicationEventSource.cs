@@ -1,9 +1,8 @@
-﻿namespace HighLoadProvider.EventSources
+﻿using System.Diagnostics.Tracing;
+using Infrastructure;
+
+namespace HighLoadProvider.EventSources
 {
-    using System.Diagnostics.Tracing;
-
-    using Infrastructure;
-
     [EventSource(Name = EventSourceConstants.ApplicationEventSource)]
     public sealed class ApplicationEventSource : EventSource
     {
