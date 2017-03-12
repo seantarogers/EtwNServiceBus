@@ -57,6 +57,6 @@ No, the Consumer service is simply an ETW Consumer. It can used to create trace 
     
 ## Deployment Strategy
 
-The ETW Consumer should be deployed next to the Providers that are emiting the trace events.  So typically you would have one Consumer per logical server and that would provide event consumption for all sites and services running on that server.
+The ETW Consumer should be deployed next to the Providers that are emiting the trace events.  So typically you would have one Consumer per logical server and that would provide event consumption for all sites and services running on that server. The Consumer can easily be configured to deploy to multiple servers whilst subsribing to multiple sets of event streams within each of those servers.
 
 ```
