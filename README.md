@@ -24,15 +24,15 @@ This test compares the rate at which the Provider could emit traces.  It does no
 ## First Level Buffering
 
 This solution offers two levels of buffering of trace events. This is important for both performance and also to protect against event loss as the Consumer may not be able to keep up with the Provider.  
-  First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased via the app.config if needed.
+  First level buffering is provided by ETW. Each ETW session will buffer trace events internally in it's buffer pool until the Consumer is available to read them. The default is 64MB per session, but this can be increased via the Consumer's app.config if needed.
 
 ## Second Level Buffering
 
-Second level buffering is provided by the Consumer service. It agressively buffers both the writing of events to the database and the writing of events to the rolling log files. Currently, this buffer is set to 1000 trace events. The Windows Event Log trace writing is not buffered. This is because the existance of these events are used by SCOM to trigger real time email alerts to interested parties.
+Second level buffering is provided by the Consumer service. It agressively buffers both the writing of events to the database and the writing of events to the rolling log files. Currently, this buffer is set to cache until it receives 1000 trace events. The Windows Event Log trace writing is not buffered. This is because the existance of these events are used by SCOM to trigger real time email alerts to interested parties.
 
 ## Buffer Flusher
 
-The Buffer Flusher ensures that the second level buffers do not go stale when there is low tracing activity. The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers). This allows us to provide robust buffering without compromise. The flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown.
+The Buffer Flusher ensures that the second level buffers do not go stale when there is low tracing activity. The flusher will run every 100 seconds and flush each Event Consumer's buffers (the database buffers and the rolling log file buffers). This allows us to provide robust buffering without compromise. The flusher is also executed when the ServiceHost.Stop() method is triggered on service shutdown. The flush frequency is configurable in the Consumer's app.config.
 
 ## Architecture
 
