@@ -40,7 +40,7 @@ The Buffer Flusher ensures that the second level buffers do not go stale when th
 
 ## Do I need to be using NServiceBus to use this?
 
-No, the Consumer service is simply an ETW consumer. It can used to just listen for standard application trace events.
+No, the Consumer service is simply an ETW Consumer. It can used to create trace sessions for and subscribe to any type of trace events. 
 
 ## To Run Solution And view the Trace Results
 
