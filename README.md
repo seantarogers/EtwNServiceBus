@@ -8,7 +8,7 @@ The Consumer project is a lightweight, multi-threaded, generic ETW Consumer and 
 
 ## Provider
 
-The Consumer project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider emits application trace events that are logged explicitly and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces.
+The Consumer project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider emits application trace events and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces.
 
 ## Performance Comparisons
 
