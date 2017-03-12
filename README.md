@@ -7,6 +7,14 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 This is a lightweight, multi-threaded, generic ETW Consumer. It consumes trace events from configurable Event Sources. The solution also contains an ETW Provider that has configured it's NServiceBus Bus instance to emit debug and error trace events to ETW.
   The Consumer was written as a simplified, modern and easily deployable alternative to the Semantic Logging Application Block. The Provider was written as a high performance logger for NServiceBus.
 
+## Consumer
+
+The Consumer project is a generic ETW Consumer and Controller.  It is responsible for creating event stream sessions and then subscribing to them using the Reactive Extensions library. It can be configured to listen to create and subscribe to multiple event streams, which it will manage on different threads.
+
+## Provider
+
+The Consumer project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider emits application trace events that are logged explicitly and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces.
+
 ## Performance Comparisons
 
 The PerformanceComparisons project compares the tracing performance of in-process Log4Net (with 3 appenders configured: RollingLogFile, ADONet and Windows Event Log) against out-of-process ETW, over a 10 second period.  It measures how many traces they can each emit.  If you are just interested in the results:
@@ -52,32 +60,8 @@ No, the Consumer service is simply an ETW consumer. It can used to just listen f
     + Windows Event Log\Applications and Services Logs\EtwConsumerLog to view error traces from the Web Api
     + C:\logs\Consumer\application-all.log to see the Consumer service logging
     
-## Deployment
+## Deployment Strategy
 
 The ETW Consumer should be deployed next to the Providers that are emiting the trace events.  So typically you would have one Consumer per logical server and that would provide event consumption for all sites and services running on that server.
-  To support this, the Consumer service allows deployment of a sub set of consumers to specific named servers. It avoids the overhead of having to deploy and run all consumers on all servers.  For each server deployment set the DeploymentLocation:  
-```<appSettings>
-    <add key="DeploymentLocation" value="WebServer" /> 
-```
-and then specify the set of EventConsumers you want to run on that DeploymentLocation like so:
-```
- <eventConsumersSection>
-    <eventConsumers deploymentLocation="WebServer"> 
-      <eventConsumer name="Consumer1" eventSource="Provider1-Application-EventSource" applicationName="Provider1" eventType="Application" rollingLogPath="c:\Logs\Provider1\" />     
-      <eventConsumer name="Consumer2" eventSource="Provider2-Bus-EventSource" applicationName="Provider2" eventType="Bus" rollingLogPath="c:\Logs\Provider2\" />     
-     </eventConsumers>     
-  </eventConsumersSection>
-  <appSettings>
-```
-## Application v Bus Event Types
-
-The Consumer was designed with service bus infrastructure events in mind. For this reason, it distinguishes between Application trace events and Bus trace events. Bus traces can be quite noisy so only Bus errors should be written to the database. However, all Application traces (Debug and Error) should be written to the database for analysis.  This switch is achieved via the following eventType configuration setting:
-```
- <eventConsumersSection>
-    <eventConsumers deploymentLocation="WebServer"> 
-      <eventConsumer eventType="Application or Bus here" />
-      </eventConsumers>
-  </eventConsumersSection>
-  <appSettings>
 
 ```
