@@ -4,7 +4,7 @@ Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configu
 
 ## Consumer
 
-The Consumer project is a lightweight, multi-threaded, generic ETW Consumer and Controller.  It is responsible for creating event stream sessions and then subscribing to them using the Reactive Extensions library. It can be configured to listen to create and subscribe to multiple event streams, which it will manage on different threads. It was written as a simple, modern and easy to deploy alternative to the Semantic Logging Application Block.
+The Consumer project is a lightweight, multi-threaded, generic ETW Consumer and ETW Controller.  It is responsible for creating event stream sessions (Controller) and then subscribing to them using the Reactive Extensions library (Consumer). It can be configured to listen to create and subscribe to multiple event streams concurrently. It was written as a simple, modern and easy to deploy alternative to the Semantic Logging Application Block.
 
 ## Provider
 
