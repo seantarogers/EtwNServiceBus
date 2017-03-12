@@ -1,6 +1,6 @@
 # EtwNServiceBus
 
-Topshelf hosted ETW Consumer consuming trace events from an ETW Provider configured to be the default logger for NServiceBus
+Topshelf hosted ETW Consumer consuming trace events from an ETW Provider which is configured to be the default logger for NServiceBus
 
 ## Consumer
 
@@ -8,7 +8,7 @@ The Consumer project is a lightweight, multi-threaded, generic ETW Consumer and 
 
 ## Provider
 
-The Consumer project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider emits application trace events and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces.
+The Consumer project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider emits application trace events and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces. Likewise, NServiceBus has been configured to use ETW rather than it's default Log4Net logger.
 
 ## Performance Comparisons
 
