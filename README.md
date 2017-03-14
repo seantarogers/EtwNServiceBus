@@ -8,7 +8,7 @@ The Consumer project is a lightweight, multi-threaded, generic ETW Consumer and 
 
 ## Provider
 
-The Provider project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider is an ETW Provider and so emits application trace events and it emits NServiceBus infrastructure trace events. The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces. Likewise, NServiceBus has been configured to use ETW rather than it's default Log4Net logger.
+The Provider project is OWIN hosted Web API that also hosts a Send Only NServiceBus instance. The Provider is an ETW Provider and so emits application trace event (Both general application trace events and NServiceBus infrastructure trace events). The traces are sent to two different event stream sessions "Bus" and "Application". Both streams have been created and subscribed to by the Consumer. The Provider uses the EventSource type to emit traces. Likewise, NServiceBus has been configured to use ETW rather than it's default Log4Net logger.
 
 ## Performance Comparisons
 
