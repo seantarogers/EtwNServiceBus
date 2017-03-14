@@ -16,7 +16,7 @@ The PerformanceComparisons project compares the tracing performance of in-proces
 
 | Tracer            | Sync                                        | Number of traces in 10 seconds |
 | ----------------- | --------------------------------------------|--------------------------------|
-| ETW Provider      | ETW Session                                 |8,495,000                       |
+| ETW Provider      | ETW Session                                 |8,495,035                       |
 | In proc Log4Net   | Rolling File, Sql Db and Windows Event Log  |      903                       |                                  
 
 This test compares the rate at which the Provider could emit traces.  It does not attempt to compare the consumption and delivery of traces. However, it illustrates the almost zero latency tracing power of ETW. Moreover, as the Consumer is out of process and completely non blocking, the rate of consumption becomes much less important.
