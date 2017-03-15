@@ -8,7 +8,7 @@
     {
         private static void Main(string[] args)
         {
-            Console.WriteLine("About to dump 3M traces into ETW...");
+            Console.WriteLine("About to dump 1M traces into ETW...");
 
             var applicationEventSource = new ApplicationEventSource();
             var i = 0;
@@ -18,7 +18,7 @@
                 i++;
             }
 
-            Console.WriteLine("Dumped 3M traces into ETW");
+            Console.WriteLine("Dumped 1M traces into ETW");
 
             Console.ReadLine();
         }

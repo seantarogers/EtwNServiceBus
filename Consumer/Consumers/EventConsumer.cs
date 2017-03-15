@@ -3,25 +3,24 @@ using System.Collections.Generic;
 using Consumer.Adapters;
 using Consumer.Functions;
 using log4net;
+using System.Linq;
 using static Consumer.Constants.ConsumerConstants;
-using static Consumer.CustomConfiguration.EventType;
 using Consumer.CustomConfiguration;
 using Consumer.Controllers;
 
 namespace Consumer.Consumers
 {
+
     public class EventConsumer : IEventConsumer
     {
         private readonly IEventPayloadBuilder eventPayloadBuilder;
-        private readonly IConsumerLoggerBuilder consumerLoggerBuilder;
         private readonly ITraceEventSessionController traceEventSessionController;
+        private readonly IEnumerable<ILoggerBuilder> loggerBuilders;
         private readonly ILog logger;
-
         private ILog eventConsumerLogger;
         private IEventConsumerConfigurationElement eventConsumerConfiguration;
         private ITraceEventSessionAdapter traceEventSession;
         private Action<Exception> raiseErrorInParentThread;
-        private Dictionary<EventType, Func<ILog>> consumerLoggerMapper;
 
         private const string YyyyMmDdHhMmSs = "{0:yyyy-MM-dd HH:mm:ss} {1} {2}";
         private const string Session = "-Session";
@@ -30,15 +29,14 @@ namespace Consumer.Consumers
 
         public EventConsumer(
             ITraceEventSessionController traceEventSessionController,
-            IConsumerLoggerBuilder consumerLoggerBuilder,
             IEventPayloadBuilder eventPayloadBuilder,
-            ILog logger)
+            ILog logger, 
+            IEnumerable<ILoggerBuilder> loggerBuilders)
         {
             this.traceEventSessionController = traceEventSessionController;
-            this.consumerLoggerBuilder = consumerLoggerBuilder;
             this.eventPayloadBuilder = eventPayloadBuilder;
             this.logger = logger;
-            InitializeConsumerLoggerMapper();
+            this.loggerBuilders = loggerBuilders;
         }
 
         public void Start(IEventConsumerConfigurationElement eventConsumerConfigurationElement, Action<Exception> onError)
@@ -68,7 +66,21 @@ namespace Consumer.Consumers
             traceEventSessionController.DisposeTraceEventSession(eventConsumerConfiguration.EventSource + Session, traceEventSession);
         }
 
-        private ILog GetConfiguredLoggerForThisEventConsumer() => consumerLoggerMapper[eventConsumerConfiguration.TraceEventType].Invoke();
+        private ILog GetConfiguredLoggerForThisEventConsumer()
+        {
+            var loggerBuilder =
+                loggerBuilders.FirstOrDefault(l => l.IsApplicable(eventConsumerConfiguration.TraceEventType));
+            if (loggerBuilder == null)
+            {
+                throw new ApplicationException(
+                    $"Cannot find logger builder for event type: {eventConsumerConfiguration.TraceEventType}");
+            }
+
+            return loggerBuilder.Build(
+                eventConsumerConfiguration.RollingLogPath,
+                eventConsumerConfiguration.Name,
+                eventConsumerConfiguration.ApplicationName);
+        }
 
         private void StartTraceEventSession()
         {
@@ -131,31 +143,6 @@ namespace Consumer.Consumers
             LogicalThreadContext.Properties["Logger"] = eventConsumerConfiguration.Name;
             LogicalThreadContext.Properties["LogDate"] = traceEventAdapter.TimeStamp;
             LogicalThreadContext.Properties["ApplicationName"] = eventConsumerConfiguration.ApplicationName;
-        }
-
-        private void InitializeConsumerLoggerMapper()
-        {
-            consumerLoggerMapper = new Dictionary<EventType, Func<ILog>>
-            {
-                {
-                    Application, () => consumerLoggerBuilder.BuildForApplicationTracing(
-                        eventConsumerConfiguration.RollingLogPath,
-                        eventConsumerConfiguration.Name,
-                        eventConsumerConfiguration.ApplicationName)
-                },
-                {
-                    Bus, () => consumerLoggerBuilder.BuildForBusTracing(
-                        eventConsumerConfiguration.RollingLogPath,
-                        eventConsumerConfiguration.Name,
-                        eventConsumerConfiguration.ApplicationName)
-                },
-                {
-                    SignalR, () => consumerLoggerBuilder.BuildForSignalRTracing(
-                        eventConsumerConfiguration.RollingLogPath,
-                        eventConsumerConfiguration.Name,
-                        eventConsumerConfiguration.ApplicationName)
-                }
-            };
         }
     }
 }

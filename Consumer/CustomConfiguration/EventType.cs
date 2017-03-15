@@ -3,7 +3,6 @@
     public enum EventType
     {
         Application,
-        Bus,
-        SignalR
+        Bus
     }
 }

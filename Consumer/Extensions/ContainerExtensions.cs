@@ -45,7 +45,8 @@ namespace Consumer.Extensions
             container.Register<IWindowEventLogAppenderBuilder, WindowEventLogAppenderBuilder>();
             container.Register<IRollingLogFileAppenderBuilder, RollingLogFileAppenderBuilder>();
             container.Register<IEventPayloadBuilder, EventPayloadBuilder>();
-            container.Register<IConsumerLoggerBuilder, ConsumerLoggerBuilder>();
+            container.Register<IBufferingForwardingAppenderBuilder, BufferingForwardingAppenderBuilder>();
+            container.RegisterCollection<ILoggerBuilder>(new[] { typeof(ILoggerBuilder).Assembly });
             container.Register<IBufferFlusher, BufferFlusher>();
 
             container.RegisterConditional(typeof(ILog),
