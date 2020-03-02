@@ -1,4 +1,4 @@
-# EtwNServiceBus
+# Etw NServiceBus
 
 Topshelf hosted ETW Consumer consuming trace events from an ETW Provider which is configured to be the default logger for NServiceBus
 
